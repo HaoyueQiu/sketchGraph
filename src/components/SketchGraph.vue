@@ -4,13 +4,17 @@
       <el-header><p>"this is SketchGraph"</p></el-header>
       <el-container>
         <el-aside width="200px">
-          <p>"This a control panel"</p>
+          <p>This a control panel</p>
           <el-color-picker
             v-model="drawColor"
             show-alpha
             :predefine="predefineColors"
             @change="addPredefineColor(drawColor)">
           </el-color-picker>
+          <div class="block">
+            <span>画笔粗细</span>
+            <el-slider v-model="drawWidth" :min=1></el-slider>
+          </div>
           <el-button-group>
             <div v-for="(tool,idx) in toolsArr" :key="idx"
                  @click="handleTools(tool.name)">
@@ -80,7 +84,7 @@
         drawWidth: 2,
         drawColor: 'rgba(0, 0, 0, 1)',
         predefineColors: [],
-        predefineColorsNum:30,
+        predefineColorsNum: 30,
 
       }
     },
@@ -186,15 +190,18 @@
         if (this.drawingObject) {
           this.fabricCanvas.remove(this.drawingObject)
         }
+        this.setAllObjSelectable(true);
         let drawingObject = null;
         switch (tool) {
           case 'clear':
             this.resetCanvas();
             break;
           case 'rectangle':
+            this.setAllObjSelectable(false);
             drawingObject = this.drawRectangle();
             break;
           case 'circle':
+            this.setAllObjSelectable(false);
             drawingObject = this.drawCircle();
             break;
           case 'redo':
@@ -204,7 +211,6 @@
             this.undo();
             break;
           case 'choose':
-
             break;
           default:
             break;
@@ -251,8 +257,7 @@
           strokeWidth: this.drawWidth,
         });
         return drawingObject;
-      }
-      ,
+      },
       drawCircle() {
         let moveX = this.mouseTo.x - this.mouseFrom.x;
         let moveY = this.mouseTo.y - this.mouseFrom.y;
@@ -268,6 +273,11 @@
           strokeWidth: this.drawWidth
         });
         return fabricObject;
+      },
+      setAllObjSelectable(isSelectable) {
+        this.fabricCanvas.forEachObject(function (obj) {
+          obj.selectable = isSelectable;
+        });
       },
       //绘制文字对象
       // drawText() {
