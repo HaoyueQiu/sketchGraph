@@ -5,6 +5,12 @@
       <el-container>
         <el-aside width="200px">
           <p>"This a control panel"</p>
+          <el-color-picker
+            v-model="drawColor"
+            show-alpha
+            :predefine="predefineColors"
+            @change="addPredefineColor(drawColor)">
+          </el-color-picker>
           <el-button-group>
             <div v-for="(tool,idx) in toolsArr" :key="idx"
                  @click="handleTools(tool.name)">
@@ -24,6 +30,7 @@
 
 <script>
   import {fabric} from 'fabric'
+
   export default {
     name: 'SketchGraph',
     data() {
@@ -40,6 +47,9 @@
           },
           {
             name: 'circle',
+          },
+          {
+            name: 'fill',
           },
           // {
           //   name: 'line',
@@ -67,9 +77,10 @@
         fabricHistoryJson: [], //记录绘制历史：重做、撤销
         step: 0, // 用于 重做、撤销操作的计步
         drawingObject: null, //绘制对象
-        drawColor: '#E34F51',
         drawWidth: 2,
-
+        drawColor: 'rgba(0, 0, 0, 1)',
+        predefineColors: [],
+        predefineColorsNum:30,
 
       }
     },
@@ -88,9 +99,9 @@
         let _this = this;
         this.fabricCanvas = new fabric.Canvas('canvas', {
           isDrawingMode: false,
-          selectable: false,
+          // 表明是否可以group selection，default = true
           selection: false,
-          // devicePixelRatio:true, //Retina 高清屏 屏幕支持
+          // devicePixelRatio:true, //Retina 高清屏 屏幕支持？？？？？？
         });
         this.fabricCanvas.setWidth(this.canvasWidth);
         this.fabricCanvas.setHeight(500);
@@ -119,11 +130,22 @@
             // if (this.currentTool == 'text') {
             //   this.drawText()
             // }
+            switch (this.currentTool) {
+              case "remove":
+                //一次删除一个物体
+                this.fabricCanvas.remove(o.target);
+                break;
+              case 'fill':
+                if (o.target) {
+                  o.target.set({fill: this.drawColor});
+                }
+            }
           },
           'mouse:up': (o) => {
             this.mouseTo.x = o.pointer.x;
             this.mouseTo.y = o.pointer.y;
             this.updateModifications();
+            this.isDrawing = false;
             this.isDrawing = false;
             this.drawingObject = null;
           },
@@ -135,38 +157,20 @@
             this.mouseTo.y = o.pointer.y;
             this.handleTools(this.currentTool);
           },
-          //对象移动时间
+          //对象移动期间，设置透明度
           'object:moving': (e) => {
             e.target.opacity = 0.5;
           },
           'object:modified': (e) => {
             e.target.opacity = 1;
-            let object = e.target;
-            this.updateModifications();
           },
-          // 'selection:created': (e) => {
-          //   if (e.target._objects) {
-          //     //多选删除
-          //     var etCount = e.target._objects.length;
-          //     for (var etindex = 0; etindex < etCount; etindex++) {
-          //       this.fabricObj.remove(e.target._objects[etindex]);
-          //     }
-          //   } else {
-          //     //单选删除
-          //     this.fabricObj.remove(e.target);
-          //   }
-          //   this.fabricObj.discardActiveObject(); //清楚选中框
-          //   this.updateModifications(true)
-          // },
         });
       },
       // transformMouse(mouseX, mouseY) {
       //   return {x: mouseX / this.zoom, y: mouseY / this.zoom};
       // },
       resetCanvas() {
-        this.fabricCanvas.selectable = false;
-        this.fabricCanvas.selection = false;
-        this.fabricCanvas.skipTargetFind = true;
+        this.fabricCanvas.clear();
         this.mouseFrom = {};
         this.mouseTo = {};
         this.drawingObject = null;
@@ -179,22 +183,12 @@
       },
       handleTools(tool) {
         this.currentTool = tool;
-        //isDrawingMode为True就能用鼠标随机画线条
-        this.fabricCanvas.isDrawingMode = false;
         if (this.drawingObject) {
           this.fabricCanvas.remove(this.drawingObject)
         }
         let drawingObject = null;
         switch (tool) {
-          case 'remove':
-            console.log('remove');
-            this.fabricCanvas.selection = true;
-            // skipTargetFind为true时：选中的会被设置为null，即无法被选中
-            this.fabricCanvas.skipTargetFind = false;
-            this.fabricCanvas.selectable = true;
-            break;
           case 'clear':
-            this.fabricCanvas.clear();
             this.resetCanvas();
             break;
           case 'rectangle':
@@ -208,6 +202,9 @@
             break;
           case 'undo':
             this.undo();
+            break;
+          case 'choose':
+
             break;
           default:
             break;
@@ -257,10 +254,14 @@
       }
       ,
       drawCircle() {
-        let radius = Math.sqrt((this.mouseTo.x - this.mouseFrom.x) * (this.mouseTo.x - this.mouseFrom.x) + (this.mouseTo.y - this.mouseFrom.y) * (this.mouseTo.y - this.mouseFrom.y)) / 2;
+        let moveX = this.mouseTo.x - this.mouseFrom.x;
+        let moveY = this.mouseTo.y - this.mouseFrom.y;
+        let radius = Math.sqrt((moveX) * (moveX) + (moveY) * (moveY));
+        let top = this.mouseFrom.y - radius;
+        let left = this.mouseFrom.x - radius;
         let fabricObject = new fabric.Circle({
-          left: this.mouseFrom.x,
-          top: this.mouseFrom.y,
+          left: left,
+          top: top,
           stroke: this.drawColor,
           fill: "rgba(255, 255, 255, 0)",
           radius: radius,
@@ -283,6 +284,18 @@
       //   this.textboxObj.hiddenTextarea.focus();
       //   this.updateModifications(true)
       // },
+      addPredefineColor(color) {
+        let len = this.predefineColors.length;
+        for (let i = 0; i < len; ++i) {
+          if (color == this.predefineColors[i]) {
+            return;
+          }
+        }
+        if (len >= this.predefineColorsNum) {
+          this.predefineColors.shift();
+        }
+        this.predefineColors.push(color);
+      },
     },
   }
 </script>
