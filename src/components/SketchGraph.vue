@@ -36,46 +36,46 @@
 
       <div class="attributeBlock">
         <span class="attributeSpan">x</span>
-        <el-input type="number" v-model="currentObj.left" min="0" :max="canvasWidth"></el-input>
+        <el-input type="number" v-model="currentObj.left" min="0" :max="canvasWidth" @blur="changeLeft()"></el-input>
         <span class="attributeSpan">y</span>
-        <el-input type="number" v-model="currentObj.top" min="0" :max="canvasWidth"></el-input>
+        <el-input type="number" v-model="currentObj.top" min="0" :max="canvasWidth" @blur="changeTop()"></el-input>
       </div>
 
       <div class="attributeBlock">
         <span class="attributeSpan">width</span>
-        <el-input type="number" v-model="currentObj.width" min="0"></el-input>
+        <el-input type="number" v-model="currentObj.width" min="0" @blur="changeWidth()"></el-input>
         <span class="attributeSpan">height</span>
-        <el-input type="number" v-model="currentObj.height" min="0"></el-input>
+        <el-input type="number" v-model="currentObj.height" min="0" @blur="changeHeight()"></el-input>
       </div>
 
       <div class="attributeBlock">
         <span class="attributeSpan">角度</span>
-        <el-input type="number" v-model="currentObj.angle" min="0"></el-input>
+        <el-input type="number" v-model="currentObj.angle" min="0" @blur="changeAngle()"></el-input>
       </div>
 
       <div class="attributeBlock">
         <span class="attributeSpan">画笔粗细</span>
-        <el-input type="number" v-model="currentObj.strokeWidth" min="0"></el-input>
+        <el-input type="number" v-model="currentObj.strokeWidth" min="0" @blur="changeStrokeWidth()"></el-input>
       </div>
 
       <div class="attributeBlock">
         <span class="attributeSpan">画笔颜色</span>
-        <el-color-picker v-model="currentObj.color" show-alpha :predefine="predefineColors"></el-color-picker>
+        <el-color-picker v-model="currentObj.color" show-alpha :predefine="predefineColors" @change="changeStrorkeColor()"></el-color-picker>
       </div>
 
       <div class="attributeBlock">
         <span class="attributeSpan">填充颜色</span>
-        <el-color-picker v-model="currentObj.fill" show-alpha :predefine="predefineColors"></el-color-picker>
+        <el-color-picker v-model="currentObj.fill" show-alpha :predefine="predefineColors" @change="changeFillColor()"></el-color-picker>
       </div>
 
       <div class="attributeBlock">
         <span class="attributeSpan">水平翻转</span>
-        <el-switch v-model="currentObj.flipX" active-color="#13ce66" inactive-color="#888888"></el-switch>
+        <el-switch v-model="currentObj.flipX" active-color="#13ce66" inactive-color="#888888" @blur="changeFlipX()"></el-switch>
       </div>
 
       <div class="attributeBlock">
         <span class="attributeSpan">垂直翻转</span>
-        <el-switch v-model="currentObj.flipY" active-color="#13ce66" inactive-color="#888888"></el-switch>
+        <el-switch v-model="currentObj.flipY" active-color="#13ce66" inactive-color="#888888" @blur="changeFlipY()"></el-switch>
       </div>
     </el-drawer>
   </div>
@@ -136,6 +136,7 @@
         idNum: 0,//全局idNum，用于自动创建名称
         attributeDrawer: false,
         currentObj: {
+          obj:'',
           //id、颜色、画笔粗细、填充、位置、大小(宽、高)、是否删除、旋转角度、翻转(flipX flipY)
           id: '00',
           newid: '00',
@@ -389,6 +390,7 @@
       },
 
       currentObjAttribute(fabricObj) {
+        this.currentObj.obj = fabricObj;
         this.currentObj.id = fabricObj.get('name');
         this.currentObj.newid = fabricObj.get('name');
         this.currentObj.left = fabricObj.get('left');
@@ -410,8 +412,29 @@
           this.currentObj.newid = this.currentObj.id;
           return;
         }
-        this.fabricCanvas.getItemByName(this.currentObj.id).set({'name': this.currentObj.newid});
+        this.currentObj.obj.set({'name': this.currentObj.newid});
       },
+      changeLeft(){
+        this.currentObj.obj.set({left:this.currentObj.left});
+        // this.fabricCanvas.renderAll();
+        // this.currentObj.obj.setCoords({left: this.currentObj.left});
+      },
+      changeTop(){
+        this.currentObj.obj.set({top:this.currentObj.top});
+        // this.currentObj.obj.setCoords({top: this.currentObj.top});
+      },
+      changeWidth(){
+        this.currentObj.obj.set({width:this.currentObj.width});
+      },
+      changeFillColor(){
+        console.log("change fill color");
+        console.log(this.currentObj.obj,this.currentObj.fill);
+        this.currentObj.obj.set({fill:this.currentObj.fill});
+      },
+
+// changeHeight()
+// changeAngle()
+// changeStrokeWidth()
 
       isIDUnique(id) {
         let objects = this.fabricCanvas.getObjects();
