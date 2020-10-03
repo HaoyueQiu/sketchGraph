@@ -73,10 +73,8 @@
           }
 
         ],
-        //记录鼠标的移动
-        mouseFrom: {},
+        mouseFrom: {}, //记录鼠标的移动
         mouseTo: {},
-        // moveCount: 1,
         isDrawing: false, //当前是否处于绘制模式
         fabricHistoryJson: [], //记录绘制历史：重做、撤销
         step: 0, // 用于 重做、撤销操作的计步
@@ -84,8 +82,9 @@
         drawWidth: 2,
         drawColor: 'rgba(0, 0, 0, 1)',
         predefineColors: [],
-        predefineColorsNum: 30,
-
+        predefineColorsNum: 30,//预定义颜色的最大上限
+        isObjClicked: false, //判断是否单击并且没有移动物体
+        idNum:0,//全局idNum，用于自动创建名称
       }
     },
     mounted() {
@@ -131,6 +130,9 @@
             this.mouseFrom.x = o.pointer.x;
             this.mouseFrom.y = o.pointer.y;
             this.isDrawing = true;
+            if (o.target) {
+              this.isObjClicked = true;
+            }
             // if (this.currentTool == 'text') {
             //   this.drawText()
             // }
@@ -152,6 +154,12 @@
             this.isDrawing = false;
             this.isDrawing = false;
             this.drawingObject = null;
+            if (this.isObjClicked && o.target) {
+              console.log("an object is selected and not move!");
+              let name = o.target.get('name');
+              let color = o.target.get('color');
+              this.isObjClicked = false;
+            }
           },
           'mouse:move': (o) => {
             if (!this.isDrawing) {
@@ -164,6 +172,7 @@
           //对象移动期间，设置透明度
           'object:moving': (e) => {
             e.target.opacity = 0.5;
+            this.isObjClicked = false;
           },
           'object:modified': (e) => {
             e.target.opacity = 1;
@@ -192,6 +201,7 @@
         }
         this.setAllObjSelectable(true);
         let drawingObject = null;
+        let name='';
         switch (tool) {
           case 'clear':
             this.resetCanvas();
@@ -199,10 +209,12 @@
           case 'rectangle':
             this.setAllObjSelectable(false);
             drawingObject = this.drawRectangle();
+            name = 'rectangle';
             break;
           case 'circle':
             this.setAllObjSelectable(false);
             drawingObject = this.drawCircle();
+            name = 'circle';
             break;
           case 'redo':
             this.redo();
@@ -210,12 +222,12 @@
           case 'undo':
             this.undo();
             break;
-          case 'choose':
-            break;
           default:
             break;
         }
         if (drawingObject && this.isDrawing) {
+          drawingObject.set({'name':name+this.idNum});
+          this.idNum++;
           this.fabricCanvas.add(drawingObject);
           this.drawingObject = drawingObject;
         }

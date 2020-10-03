@@ -1,44 +1,45 @@
 <template>
   <div>
-
-    <el-radio-group v-model="direction">
-      <el-radio label="ltr" :modal=false>从左往右开</el-radio>
-      <el-radio label="rtl">从右往左开</el-radio>
-      <el-radio label="ttb">从上往下开</el-radio>
-      <el-radio label="btt">从下往上开</el-radio>
-    </el-radio-group>
-
-    <el-button @click="drawer = true" type="primary" style="margin-left: 16px;">
-      点我打开
-    </el-button>
-
+    <el-button type="text" @click="table = true">打开嵌套表格的 Drawer</el-button>
     <el-drawer
-      title="我是标题"
-      :visible.sync="drawer"
-      :direction="direction"
-      :before-close="handleClose">
-      <span>我来啦!</span>
+      title="我嵌套了表格!"
+      :visible.sync="table"
+      direction="rtl"
+      size="50%">
+      <el-table :data="gridData">
+        <el-table-column property="date" label="日期" width="150"></el-table-column>
+        <el-table-column property="name" label="姓名" width="200"></el-table-column>
+        <el-table-column property="address" label="地址"></el-table-column>
+      </el-table>
     </el-drawer>
   </div>
+
 </template>
 <script>
   export default {
-    name: 'Test',
     data() {
       return {
-        drawer: false,
-        direction: 'rtl',
+        table: false,
+        gridData: [{
+          date: '2016-05-02',
+          name: '王小虎',
+          address: '上海市普陀区金沙江路 1518 弄'
+        }, {
+          date: '2016-05-04',
+          name: '王小虎',
+          address: '上海市普陀区金沙江路 1518 弄'
+        }, {
+          date: '2016-05-01',
+          name: '王小虎',
+          address: '上海市普陀区金沙江路 1518 弄'
+        }, {
+          date: '2016-05-03',
+          name: '王小虎',
+          address: '上海市普陀区金沙江路 1518 弄'
+        }],
       };
     },
     methods: {
-      handleClose(done) {
-        this.$confirm('确认关闭？')
-          .then(_ => {
-            done();
-          })
-          .catch(_ => {
-          });
-      }
     }
-  };
+  }
 </script>
