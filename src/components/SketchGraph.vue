@@ -5,12 +5,8 @@
       <el-container>
         <el-aside width="200px">
           <p>This a control panel</p>
-          <el-color-picker
-            v-model="drawColor"
-            show-alpha
-            :predefine="predefineColors"
-            @change="addPredefineColor(drawColor)">
-          </el-color-picker>
+          <el-color-picker v-model="drawColor" show-alpha :predefine="predefineColors"
+                           @change="addPredefineColor(drawColor)"></el-color-picker>
           <div class="block">
             <span>画笔粗细</span>
             <el-slider v-model="drawWidth" :min=1></el-slider>
@@ -22,6 +18,7 @@
             </div>
           </el-button-group>
         </el-aside>
+
         <el-main>
           <div class="canvas-wraper">
             <canvas id="canvas" ref="canvas"></canvas>
@@ -29,6 +26,58 @@
         </el-main>
       </el-container>
     </el-container>
+
+
+    <el-drawer title="属性" :visible.sync="attributeDrawer" direction="rtl" size="30%">
+      <div class="attributeBlock">
+        <span class="attributeSpan">名称(唯一):</span>
+        <el-input type="text" v-model="currentObj.newid" maxlength="20" show-word-limit @blur="changeID()"></el-input>
+      </div>
+
+      <div class="attributeBlock">
+        <span class="attributeSpan">x</span>
+        <el-input type="number" v-model="currentObj.left" min="0" :max="canvasWidth"></el-input>
+        <span class="attributeSpan">y</span>
+        <el-input type="number" v-model="currentObj.top" min="0" :max="canvasWidth"></el-input>
+      </div>
+
+      <div class="attributeBlock">
+        <span class="attributeSpan">width</span>
+        <el-input type="number" v-model="currentObj.width" min="0"></el-input>
+        <span class="attributeSpan">height</span>
+        <el-input type="number" v-model="currentObj.height" min="0"></el-input>
+      </div>
+
+      <div class="attributeBlock">
+        <span class="attributeSpan">角度</span>
+        <el-input type="number" v-model="currentObj.angle" min="0"></el-input>
+      </div>
+
+      <div class="attributeBlock">
+        <span class="attributeSpan">画笔粗细</span>
+        <el-input type="number" v-model="currentObj.strokeWidth" min="0"></el-input>
+      </div>
+
+      <div class="attributeBlock">
+        <span class="attributeSpan">画笔颜色</span>
+        <el-color-picker v-model="currentObj.color" show-alpha :predefine="predefineColors"></el-color-picker>
+      </div>
+
+      <div class="attributeBlock">
+        <span class="attributeSpan">填充颜色</span>
+        <el-color-picker v-model="currentObj.fill" show-alpha :predefine="predefineColors"></el-color-picker>
+      </div>
+
+      <div class="attributeBlock">
+        <span class="attributeSpan">水平翻转</span>
+        <el-switch v-model="currentObj.flipX" active-color="#13ce66" inactive-color="#888888"></el-switch>
+      </div>
+
+      <div class="attributeBlock">
+        <span class="attributeSpan">垂直翻转</span>
+        <el-switch v-model="currentObj.flipY" active-color="#13ce66" inactive-color="#888888"></el-switch>
+      </div>
+    </el-drawer>
   </div>
 </template>
 
@@ -84,7 +133,24 @@
         predefineColors: [],
         predefineColorsNum: 30,//预定义颜色的最大上限
         isObjClicked: false, //判断是否单击并且没有移动物体
-        idNum:0,//全局idNum，用于自动创建名称
+        idNum: 0,//全局idNum，用于自动创建名称
+        attributeDrawer: false,
+        currentObj: {
+          //id、颜色、画笔粗细、填充、位置、大小(宽、高)、是否删除、旋转角度、翻转(flipX flipY)
+          id: '00',
+          newid: '00',
+          color: 'rgba(0, 0, 0, 1)',
+          strokeWidth: 0,
+          fill: 'rgba(0, 0, 0, 0)',
+          left: 0,
+          top: 0,
+          height: 0,
+          width: 0,
+          angle: 0,
+          flipX: false,
+          flipY: false,
+          delete: false,
+        },
       }
     },
     mounted() {
@@ -154,10 +220,12 @@
             this.isDrawing = false;
             this.isDrawing = false;
             this.drawingObject = null;
+            // 单击物体展开属性板
             if (this.isObjClicked && o.target) {
               console.log("an object is selected and not move!");
-              let name = o.target.get('name');
-              let color = o.target.get('color');
+              this.attributeDrawer = true;
+              // 将物体属性的值给currentObject
+              this.currentObjAttribute(o.target);
               this.isObjClicked = false;
             }
           },
@@ -201,7 +269,7 @@
         }
         this.setAllObjSelectable(true);
         let drawingObject = null;
-        let name='';
+        let name = '';
         switch (tool) {
           case 'clear':
             this.resetCanvas();
@@ -226,7 +294,7 @@
             break;
         }
         if (drawingObject && this.isDrawing) {
-          drawingObject.set({'name':name+this.idNum});
+          drawingObject.set({'name': name + this.idNum});
           this.idNum++;
           this.fabricCanvas.add(drawingObject);
           this.drawingObject = drawingObject;
@@ -291,6 +359,7 @@
           obj.selectable = isSelectable;
         });
       },
+
       //绘制文字对象
       // drawText() {
       //   this.textboxObj = new fabric.Textbox(" ", {
@@ -318,6 +387,48 @@
         }
         this.predefineColors.push(color);
       },
+
+      currentObjAttribute(fabricObj) {
+        this.currentObj.id = fabricObj.get('name');
+        this.currentObj.newid = fabricObj.get('name');
+        this.currentObj.left = fabricObj.get('left');
+        this.currentObj.top = fabricObj.get('top');
+        this.currentObj.angle = fabricObj.get('angle');
+        this.currentObj.height = fabricObj.get('height');
+        this.currentObj.width = fabricObj.get('width');
+        this.currentObj.flipX = fabricObj.get('flipX');
+        this.currentObj.flipY = fabricObj.get('flipY');
+        this.currentObj.color = fabricObj.get('stroke');
+        this.currentObj.strokeWidth = fabricObj.get('strokeWidth');
+        this.currentObj.fill = fabricObj.get('fill');
+      },
+
+      changeID() {
+        console.log("change ID");
+        if (!this.isIDUnique(this.currentObj.newid) && this.currentObj.id != this.currentObj.newid) {
+          this.ErrorMessage("跟现有物体的id重复，请重新设置");
+          this.currentObj.newid = this.currentObj.id;
+          return;
+        }
+        this.fabricCanvas.getItemByName(this.currentObj.id).set({'name': this.currentObj.newid});
+      },
+
+      isIDUnique(id) {
+        let objects = this.fabricCanvas.getObjects();
+        let len = objects.length;
+        for (let i = 0; i < len; ++i) {
+          if (objects[i].get('name') == id) {
+            return false;
+          }
+        }
+        return true;
+      },
+      //改变其它属性时进行绑定！！
+
+      ErrorMessage(message) {
+        this.$message.error(message);
+      }
+
     },
   }
 </script>
@@ -335,4 +446,17 @@
   .el-header, .el-footer {
     background-color: #B3C0D1;
   }
+</style>
+
+
+<style>
+  .attributeBlock {
+    display: table;
+  }
+
+  .attributeSpan {
+    display: table-cell;
+    vertical-align: middle;
+  }
+
 </style>

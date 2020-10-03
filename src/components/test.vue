@@ -1,11 +1,7 @@
 <template>
   <div>
     <el-button type="text" @click="drawer = true">打开嵌套表格的 Drawer</el-button>
-    <el-drawer
-      title="属性"
-      :visible.sync="drawer"
-      direction="rtl"
-      size="30%">
+    <el-drawer title="属性" :visible.sync="drawer" direction="rtl" size="30%">
       <div class="attributeBlock">
         <span class="attributeSpan">名称(唯一):</span>
         <el-input type="text" v-model="currentObj.newid" maxlength="20" show-word-limit @blur="changeID()"></el-input>
@@ -47,20 +43,12 @@
 
       <div class="attributeBlock">
         <span class="attributeSpan">水平翻转</span>
-        <el-switch
-          v-model="currentObj.flipX"
-          active-color="#13ce66"
-          inactive-color="#888888">
-        </el-switch>
+        <el-switch v-model="currentObj.flipX" active-color="#13ce66" inactive-color="#888888"></el-switch>
       </div>
 
       <div class="attributeBlock">
         <span class="attributeSpan">垂直翻转</span>
-        <el-switch
-          v-model="currentObj.flipY"
-          active-color="#13ce66"
-          inactive-color="#888888">
-        </el-switch>
+        <el-switch v-model="currentObj.flipY" active-color="#13ce66" inactive-color="#888888"></el-switch>
       </div>
 
 
