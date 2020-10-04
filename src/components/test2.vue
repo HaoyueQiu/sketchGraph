@@ -28,7 +28,13 @@
       return {
         drawer: false,
         isRight: true,
+        Obj:{
+          x:0,
+          y:1,
+        }
       };
+    },
+    mounted(){
     },
     methods: {}
   };

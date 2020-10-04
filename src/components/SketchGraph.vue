@@ -97,10 +97,12 @@
           <span class="attributeSpan">height</span>
           <el-input type="number" v-model="currentObj.height" min="0" @blur="changeAttribute('height')"></el-input>
         </div>
+
         <div v-else-if="currentObj.type=='circle'" class="attributeBlock">
           <span class="attributeSpan">radius</span>
           <el-input type="number" v-model="currentObj.radius" min="0" @blur="changeAttribute('radius')"></el-input>
         </div>
+
         <div v-else-if="currentObj.type=='ellipse'" class="attributeBlock">
           <span class="attributeSpan">rx</span>
           <el-input type="number" v-model="currentObj.rx" min="0" @blur="changeAttribute('rx')"></el-input>
@@ -147,9 +149,9 @@
 
       <div v-else>
         <div class="attributeBlock">
-        <span class="attributeSpan">文本内容</span>
-        <el-input type="textarea" autosize v-model="currentObj.text" @blur="changeAttribute('text')"></el-input>
-      </div>
+          <span class="attributeSpan">文本内容</span>
+          <el-input type="textarea" autosize v-model="currentObj.text" @blur="changeAttribute('text')"></el-input>
+        </div>
 
 
         <div class="block">
@@ -200,7 +202,7 @@
             name: 'choose',
           },
           {
-            name: 'draw',
+            name: 'pencil',
           },
           {
             name: 'rectangle',
@@ -250,6 +252,10 @@
         idNum: 0,//全局idNum，用于自动创建名称
         attributeDrawer: false,
         dashArray: [1, 0],
+        //阴影特性
+        shadowColor:'rgba(0, 0, 0, 0)',
+        shadowOffsetX:0,
+        shadowOffsetY:0,
         currentObj: {
           obj: '',
           type: '',
@@ -270,7 +276,7 @@
           flipX: false,
           flipY: false,
           delete: false,
-          text:'',
+          text: '',
           fontSize: 14,
           fontWeight: 'normal',
           underline: false,
@@ -308,7 +314,7 @@
           // devicePixelRatio:true, //Retina 高清屏 屏幕支持？？？？？？
         });
         this.fabricCanvas.setWidth(this.canvasWidth);
-        this.fabricCanvas.setHeight(500);
+        this.fabricCanvas.setHeight(800);
         //绑定画板事件，对鼠标的各个操作进行监听
         this.fabricCanvasEvent();
         // 可以通过名称来获取fabricObject
@@ -406,12 +412,17 @@
           this.fabricCanvas.remove(this.drawingObject)
         }
         this.setAllObjSelectable(false);
+        this.fabricCanvas.isDrawingMode = false;
         if (this.lastTextObj) {
           this.lastTextObj.exitEditing();
         }
         let drawingObject = null;
         let name = '';
         switch (tool) {
+          case 'pencil':
+            this.fabricCanvas.isDrawingMode = true;
+            this.freeDraw();
+            break;
           case 'clear':
             this.resetCanvas();
             break;
@@ -444,7 +455,7 @@
             this.setAllObjSelectable(true);
             break;
           case 'text':
-            this.activeName='fontSettings';
+            this.activeName = 'fontSettings';
             break;
           default:
             break;
@@ -460,12 +471,14 @@
           this.setAllObjSelectable(false);
         }
       },
+
       // 储存操作记录
       updateModifications() {
         // 每次都记录一整个画布状态，比较耗存储。
         // 后续改造：可以考虑记录变化的操作
         this.fabricHistoryJson.push(JSON.stringify(this.fabricCanvas));
       },
+
       //撤销操作
       undo() {
         let state = this.fabricHistoryJson;
@@ -485,6 +498,12 @@
           this.fabricCanvas.renderAll();
           this.step -= 1;
         }
+      },
+
+      freeDraw() {
+        this.fabricCanvas.freeDrawingBrush.width = this.drawWidth;
+        this.fabricCanvas.freeDrawingBrush.color = this.drawColor;
+        this.fabricCanvas.freeDrawingBrush.strokeDashArray=this.dashArray;
       },
 
       drawRectangle() {
