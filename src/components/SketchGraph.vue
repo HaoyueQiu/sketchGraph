@@ -4,28 +4,64 @@
       <el-header><p>"this is SketchGraph"</p></el-header>
       <el-container>
         <el-aside width="300px">
-          <p>This a control panel</p>
-          <el-color-picker v-model="drawColor" show-alpha :predefine="predefineColors"
-                           @change="addPredefineColor(drawColor)"></el-color-picker>
+          <el-tabs v-model="activeName" type="card">
+            <el-tab-pane label="命令行" name="commandLine">命令行</el-tab-pane>
 
-          <div class="block">
-            <span>画笔粗细</span>
-            <el-slider v-model="drawWidth" :min=1></el-slider>
-          </div>
+            <el-tab-pane label="工具栏" name="controlPanel">
+              <el-color-picker v-model="drawColor" show-alpha :predefine="predefineColors"
+                               @change="addPredefineColor(drawColor)"></el-color-picker>
 
-          <div class="block">
-            <span>虚线设置：实线</span>
-            <el-slider v-model="dashArray[0]" :min=1></el-slider>
-            <span>虚线设置：空白</span>
-            <el-slider v-model="dashArray[1]" :min=0></el-slider>
-          </div>
+              <div class="block">
+                <span>画笔粗细</span>
+                <el-slider v-model="drawWidth" :min=1></el-slider>
+              </div>
 
-          <el-button-group>
-            <div v-for="(tool,idx) in toolsArr" :key="idx"
-                 @click="handleTools(tool.name)">
-              <el-button type="primary"> {{tool.name}}</el-button>
-            </div>
-          </el-button-group>
+              <div class="block">
+                <span>虚线设置：实线</span>
+                <el-slider v-model="dashArray[0]" :min=1></el-slider>
+                <span>虚线设置：空白</span>
+                <el-slider v-model="dashArray[1]" :min=0></el-slider>
+              </div>
+
+              <el-button-group>
+                <div v-for="(tool,idx) in toolsArr" :key="idx"
+                     @click="handleTools(tool.name)">
+                  <el-button type="primary"> {{tool.name}}</el-button>
+                </div>
+              </el-button-group>
+            </el-tab-pane>
+
+            <el-tab-pane label="文本设置" name="fontSettings">
+              <div class="block">
+                <span>字体大小</span>
+                <el-slider v-model="textSetting.fontSize" :min=1></el-slider>
+              </div>
+
+              <div class="block">
+                <span>加粗</span>
+                <el-radio v-model="textSetting.fontWeight" label="normal">正常</el-radio>
+                <el-radio v-model="textSetting.fontWeight" label="bold">加粗</el-radio>
+              </div>
+
+              <div class="block">
+                <span>下划线</span>
+                <el-switch v-model="textSetting.underline" active-color="#13ce66" inactive-color="#888888"></el-switch>
+              </div>
+
+              <div class="block">
+                <span>上划线</span>
+                <el-switch v-model="textSetting.overline" active-color="#13ce66" inactive-color="#888888"></el-switch>
+              </div>
+
+              <div class="block">
+                <span>删除线</span>
+                <el-switch v-model="textSetting.lineThrough" active-color="#13ce66"
+                           inactive-color="#888888"></el-switch>
+              </div>
+
+            </el-tab-pane>
+
+          </el-tabs>
         </el-aside>
 
         <el-main>
@@ -52,59 +88,101 @@
                   @blur="changeAttribute('top')"></el-input>
       </div>
 
-      <div v-if="currentObj.type=='rect' || currentObj.type=='line'" class="attributeBlock">
-        <span class="attributeSpan">width</span>
-        <el-input type="number" v-model="currentObj.width" min="0" @blur="changeAttribute('width')"></el-input>
-        <span class="attributeSpan">height</span>
-        <el-input type="number" v-model="currentObj.height" min="0" @blur="changeAttribute('height')"></el-input>
-      </div>
-      <div v-else-if="currentObj.type=='circle'" class="attributeBlock">
-        <span class="attributeSpan">radius</span>
-        <el-input type="number" v-model="currentObj.radius" min="0" @blur="changeAttribute('radius')"></el-input>
-      </div>
-      <div v-else-if="currentObj.type=='ellipse'" class="attributeBlock">
-        <span class="attributeSpan">rx</span>
-        <el-input type="number" v-model="currentObj.rx" min="0" @blur="changeAttribute('rx')"></el-input>
-        <span class="attributeSpan">ry</span>
-        <el-input type="number" v-model="currentObj.ry" min="0" @blur="changeAttribute('ry')"></el-input>
-      </div>
-
-      <div class="attributeBlock">
-        <span class="attributeSpan">角度</span>
-        <el-input type="number" v-model="currentObj.angle" min="0" @blur="changeAttribute('angle')"></el-input>
-      </div>
-
-      <div class="attributeBlock">
-        <span class="attributeSpan">画笔粗细</span>
-        <el-input type="number" v-model="currentObj.strokeWidth" min="0"
-                  @blur="changeAttribute('strokeWidth')"></el-input>
-      </div>
-
-      <div class="attributeBlock">
-        <span class="attributeSpan">画笔颜色</span>
-        <el-color-picker v-model="currentObj.strokeColor" show-alpha :predefine="predefineColors"
-                         @change="changeAttribute('strokeColor')"></el-color-picker>
-      </div>
-
-      <div v-if="currentObj.type!='line'" class="attributeBlock">
-        <span class="attributeSpan">填充颜色</span>
-        <el-color-picker v-model="currentObj.fillColor" show-alpha :predefine="predefineColors"
-                         @change="changeAttribute('fillColor')"></el-color-picker>
-      </div>
+      <div v-if="currentObj.type!='textbox'">
 
 
-      <div class="attributeBlock">
-        <span class="attributeSpan">水平翻转</span>
-        <el-switch v-model="currentObj.flipX" active-color="#13ce66" inactive-color="#888888"
-                   @change="changeAttribute('flipX')"></el-switch>
+        <div v-if="currentObj.type=='rect' || currentObj.type=='line'" class="attributeBlock">
+          <span class="attributeSpan">width</span>
+          <el-input type="number" v-model="currentObj.width" min="0" @blur="changeAttribute('width')"></el-input>
+          <span class="attributeSpan">height</span>
+          <el-input type="number" v-model="currentObj.height" min="0" @blur="changeAttribute('height')"></el-input>
+        </div>
+        <div v-else-if="currentObj.type=='circle'" class="attributeBlock">
+          <span class="attributeSpan">radius</span>
+          <el-input type="number" v-model="currentObj.radius" min="0" @blur="changeAttribute('radius')"></el-input>
+        </div>
+        <div v-else-if="currentObj.type=='ellipse'" class="attributeBlock">
+          <span class="attributeSpan">rx</span>
+          <el-input type="number" v-model="currentObj.rx" min="0" @blur="changeAttribute('rx')"></el-input>
+          <span class="attributeSpan">ry</span>
+          <el-input type="number" v-model="currentObj.ry" min="0" @blur="changeAttribute('ry')"></el-input>
+        </div>
+
+        <div class="attributeBlock">
+          <span class="attributeSpan">角度</span>
+          <el-input type="number" v-model="currentObj.angle" min="0" @blur="changeAttribute('angle')"></el-input>
+        </div>
+
+        <div class="attributeBlock">
+          <span class="attributeSpan">画笔粗细</span>
+          <el-input type="number" v-model="currentObj.strokeWidth" min="0"
+                    @blur="changeAttribute('strokeWidth')"></el-input>
+        </div>
+
+        <div class="attributeBlock">
+          <span class="attributeSpan">画笔颜色</span>
+          <el-color-picker v-model="currentObj.strokeColor" show-alpha :predefine="predefineColors"
+                           @change="changeAttribute('strokeColor')"></el-color-picker>
+        </div>
+
+        <div v-if="currentObj.type!='line'" class="attributeBlock">
+          <span class="attributeSpan">填充颜色</span>
+          <el-color-picker v-model="currentObj.fillColor" show-alpha :predefine="predefineColors"
+                           @change="changeAttribute('fillColor')"></el-color-picker>
+        </div>
+
+
+        <div class="attributeBlock">
+          <span class="attributeSpan">水平翻转</span>
+          <el-switch v-model="currentObj.flipX" active-color="#13ce66" inactive-color="#888888"
+                     @change="changeAttribute('flipX')"></el-switch>
+        </div>
+
+        <div class="attributeBlock">
+          <span class="attributeSpan">垂直翻转</span>
+          <el-switch v-model="currentObj.flipY" active-color="#13ce66" inactive-color="#888888"
+                     @change="changeAttribute('flipY')"></el-switch>
+        </div>
       </div>
 
-      <div class="attributeBlock">
-        <span class="attributeSpan">垂直翻转</span>
-        <el-switch v-model="currentObj.flipY" active-color="#13ce66" inactive-color="#888888"
-                   @change="changeAttribute('flipY')"></el-switch>
+      <div v-else>
+        <div class="attributeBlock">
+        <span class="attributeSpan">文本内容</span>
+        <el-input type="textarea" autosize v-model="currentObj.text" @blur="changeAttribute('text')"></el-input>
+      </div>
+
+
+        <div class="block">
+          <span>字体大小</span>
+          <el-slider v-model="currentObj.fontSize" :min=1 @change="changeAttribute('fontSize')"></el-slider>
+        </div>
+
+        <div class="block">
+          <span>加粗</span>
+          <el-radio v-model="currentObj.fontWeight" label="normal" @change="changeAttribute('fontWeight')">正常</el-radio>
+          <el-radio v-model="currentObj.fontWeight" label="bold" @change="changeAttribute('fontWeight')">加粗</el-radio>
+        </div>
+
+        <div class="block">
+          <span>下划线</span>
+          <el-switch v-model="currentObj.underline" active-color="#13ce66"
+                     inactive-color="#888888" @change="changeAttribute('underline')"></el-switch>
+        </div>
+
+        <div class="block">
+          <span>上划线</span>
+          <el-switch v-model="currentObj.overline" active-color="#13ce66"
+                     inactive-color="#888888" @change="changeAttribute('overline')"></el-switch>
+        </div>
+
+        <div class="block">
+          <span>删除线</span>
+          <el-switch v-model="currentObj.lineThrough" active-color="#13ce66"
+                     inactive-color="#888888" @change="changeAttribute('lineThrough')"></el-switch>
+        </div>
       </div>
     </el-drawer>
+
   </div>
 </template>
 
@@ -192,16 +270,22 @@
           flipX: false,
           flipY: false,
           delete: false,
+          text:'',
+          fontSize: 14,
+          fontWeight: 'normal',
+          underline: false,
+          overline: false,
+          lineThrough: false,
         },
         textSetting: {
           fontSize: 14,
           fontWeight: 'normal',
           underline: false,
           overline: false,
-          linethrough: false,
+          lineThrough: false,
         },
-        lastTextObj:null,
-
+        lastTextObj: null,
+        activeName: 'controlPanel',
       }
     },
     mounted() {
@@ -271,7 +355,6 @@
                 this.lastTextObj.enterEditing();
                 this.setAllObjSelectable(false);
                 break;
-              //退出编辑模式
             }
           },
           'mouse:up': (o) => {
@@ -316,11 +399,6 @@
         this.mouseTo = {};
         this.drawingObject = null;
         this.isDrawing = false;
-        //清除文字对象
-        // if (this.textboxObj) {
-        //   this.textboxObj.exitEditing();
-        //   this.textboxObj = null;
-        // }
       },
       handleTools(tool) {
         this.currentTool = tool;
@@ -328,7 +406,7 @@
           this.fabricCanvas.remove(this.drawingObject)
         }
         this.setAllObjSelectable(false);
-        if(this.lastTextObj){
+        if (this.lastTextObj) {
           this.lastTextObj.exitEditing();
         }
         let drawingObject = null;
@@ -364,6 +442,9 @@
             break;
           case 'choose':
             this.setAllObjSelectable(true);
+            break;
+          case 'text':
+            this.activeName='fontSettings';
             break;
           default:
             break;
@@ -469,10 +550,10 @@
           top: this.mouseFrom.y,
           fill: this.drawColor,
           fontSize: this.textSetting.fontSize,
-          fontWeight:this.textSetting.fontWeight,
-          overline:this.textSetting.overline,
-          underline:this.textSetting.underline,
-          linethrough:this.textSetting.linethrough,
+          fontWeight: this.textSetting.fontWeight,
+          overline: this.textSetting.overline,
+          underline: this.textSetting.underline,
+          linethrough: this.textSetting.lineThrough,
           hasControls: true,
         });
         return fabricObj;
@@ -515,6 +596,13 @@
         this.currentObj.strokeColor = fabricObj.get('stroke');
         this.currentObj.strokeWidth = fabricObj.get('strokeWidth');
         this.currentObj.fillColor = fabricObj.get('fill');
+        this.currentObj.fontSize = fabricObj.get('fontSize');
+        this.currentObj.overline = fabricObj.get('overline');
+        this.currentObj.underline = fabricObj.get('underline');
+        this.currentObj.lineThrough = fabricObj.get('linethrough');
+        this.currentObj.fontWeight = fabricObj.get('fontWeight');
+        console.log(this.currentObj.fontWeight)
+        this.currentObj.text = fabricObj.get('text');
       },
 
       changeID() {
@@ -570,6 +658,24 @@
             break;
           case 'ry':
             this.currentObj.obj.set({ry: this.currentObj.ry});
+            break;
+          case 'fontSize':
+            this.currentObj.obj.set({fontSize: this.currentObj.fontSize});
+            break;
+          case 'overline':
+            this.currentObj.obj.set({overline: this.currentObj.overline});
+            break;
+          case 'underline':
+            this.currentObj.obj.set({underline: this.currentObj.underline});
+            break;
+          case 'lineThrough':
+            this.currentObj.obj.set({linethrough: this.currentObj.lineThrough});
+            break;
+          case 'text':
+            this.currentObj.obj.set({text: this.currentObj.text});
+            break;
+          case 'fontWeight':
+            this.currentObj.obj.set({fontWeight: this.currentObj.fontWeight});
             break;
           default:
             break;
