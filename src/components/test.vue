@@ -27,7 +27,7 @@
 
 // "add" rectangle onto canvas
         canvas.add(rect);
-        rect.set({fill:'rgba(23, 231, 2, 1)'})
+        rect.set({left:400})
       }
     }
   }

@@ -60,22 +60,26 @@
 
       <div class="attributeBlock">
         <span class="attributeSpan">画笔颜色</span>
-        <el-color-picker v-model="currentObj.color" show-alpha :predefine="predefineColors" @change="changeStrorkeColor()"></el-color-picker>
+        <el-color-picker v-model="currentObj.color" show-alpha :predefine="predefineColors"
+                         @change="changeStrorkeColor()"></el-color-picker>
       </div>
 
       <div class="attributeBlock">
         <span class="attributeSpan">填充颜色</span>
-        <el-color-picker v-model="currentObj.fill" show-alpha :predefine="predefineColors" @change="changeFillColor()"></el-color-picker>
+        <el-color-picker v-model="currentObj.fill" show-alpha :predefine="predefineColors"
+                         @change="changeFillColor()"></el-color-picker>
       </div>
 
       <div class="attributeBlock">
         <span class="attributeSpan">水平翻转</span>
-        <el-switch v-model="currentObj.flipX" active-color="#13ce66" inactive-color="#888888" @blur="changeFlipX()"></el-switch>
+        <el-switch v-model="currentObj.flipX" active-color="#13ce66" inactive-color="#888888"
+                   @blur="changeFlipX()"></el-switch>
       </div>
 
       <div class="attributeBlock">
         <span class="attributeSpan">垂直翻转</span>
-        <el-switch v-model="currentObj.flipY" active-color="#13ce66" inactive-color="#888888" @blur="changeFlipY()"></el-switch>
+        <el-switch v-model="currentObj.flipY" active-color="#13ce66" inactive-color="#888888"
+                   @blur="changeFlipY()"></el-switch>
       </div>
     </el-drawer>
   </div>
@@ -136,7 +140,7 @@
         idNum: 0,//全局idNum，用于自动创建名称
         attributeDrawer: false,
         currentObj: {
-          obj:'',
+          obj: '',
           //id、颜色、画笔粗细、填充、位置、大小(宽、高)、是否删除、旋转角度、翻转(flipX flipY)
           id: '00',
           newid: '00',
@@ -414,28 +418,40 @@
         }
         this.currentObj.obj.set({'name': this.currentObj.newid});
       },
-      changeLeft(){
-        this.currentObj.obj.set({left:this.currentObj.left});
-        // this.fabricCanvas.renderAll();
-        // this.currentObj.obj.setCoords({left: this.currentObj.left});
+      changeAttribute(attr, value) {
+
+        this.currentObj.obj.set({attr: value});
+        this.fabricCanvas.renderAll();
       },
-      changeTop(){
-        this.currentObj.obj.set({top:this.currentObj.top});
+      changeLeft() {
+        this.currentObj.obj.set({left: Number(this.currentObj.left)});
+        this.fabricCanvas.renderAll();
+      },
+      changeTop() {
+        this.currentObj.obj.set({top: this.currentObj.top});
+        this.fabricCanvas.renderAll();
         // this.currentObj.obj.setCoords({top: this.currentObj.top});
       },
-      changeWidth(){
-        this.currentObj.obj.set({width:this.currentObj.width});
+      changeWidth() {
+        this.currentObj.obj.set({width: this.currentObj.width});
+        this.fabricCanvas.renderAll();
       },
-      changeFillColor(){
-        console.log("change fill color");
-        console.log(this.currentObj.obj,this.currentObj.fill);
-        this.currentObj.obj.set({fill:this.currentObj.fill});
+      changeHeight() {
+        this.currentObj.obj.set({width: this.currentObj.width});
+        this.fabricCanvas.renderAll();
       },
-
-// changeHeight()
 // changeAngle()
 // changeStrokeWidth()
+//changeStrorkeColor()
+      changeFillColor() {
+        console.log("change fill color");
+        this.currentObj.obj.set({fill: this.currentObj.fill});
+        this.fabricCanvas.renderAll();
+      },
 
+
+// changeFlipX()
+// changeFlipY()
       isIDUnique(id) {
         let objects = this.fabricCanvas.getObjects();
         let len = objects.length;
