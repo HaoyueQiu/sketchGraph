@@ -43,11 +43,15 @@
                   @blur="changeAttribute('top')"></el-input>
       </div>
 
-      <div class="attributeBlock">
+      <div v-if="currentObj.type=='rect'" class="attributeBlock">
         <span class="attributeSpan">width</span>
         <el-input type="number" v-model="currentObj.width" min="0" @blur="changeAttribute('width')"></el-input>
         <span class="attributeSpan">height</span>
         <el-input type="number" v-model="currentObj.height" min="0" @blur="changeAttribute('height')"></el-input>
+      </div>
+      <div v-else-if="currentObj.type=='circle'" class="attributeBlock">
+        <span class="attributeSpan">radius</span>
+        <el-input type="number" v-model="currentObj.radius" min="0" @blur="changeAttribute('radius')"></el-input>
       </div>
 
       <div class="attributeBlock">
@@ -57,7 +61,8 @@
 
       <div class="attributeBlock">
         <span class="attributeSpan">画笔粗细</span>
-        <el-input type="number" v-model="currentObj.strokeWidth" min="0" @blur="changeAttribute('strokeWidth')"></el-input>
+        <el-input type="number" v-model="currentObj.strokeWidth" min="0"
+                  @blur="changeAttribute('strokeWidth')"></el-input>
       </div>
 
       <div class="attributeBlock">
@@ -108,6 +113,9 @@
             name: 'circle',
           },
           {
+            name: 'ellipse',
+          },
+          {
             name: 'fill',
           },
           // {
@@ -143,6 +151,7 @@
         attributeDrawer: false,
         currentObj: {
           obj: '',
+          type: '',
           //id、颜色、画笔粗细、填充、位置、大小(宽、高)、是否删除、旋转角度、翻转(flipX flipY)
           id: '00',
           newid: '00',
@@ -153,10 +162,12 @@
           top: 0,
           height: 0,
           width: 0,
+          radius:0,
           angle: 0,
           flipX: false,
           flipY: false,
           delete: false,
+
         },
       }
     },
@@ -167,7 +178,7 @@
     computed: {
       canvasWidth() {
         // 硬编码 侧边栏宽度...........
-        return window.innerWidth - 300;
+        return window.innerWidth - 200 - 30;
       }
     },
     methods: {
@@ -228,7 +239,7 @@
             this.isDrawing = false;
             this.drawingObject = null;
             // 单击物体展开属性板
-            if (this.isObjClicked && o.target) {
+            if (this.isObjClicked && o.target && this.currentTool == 'choose') {
               console.log("an object is selected and not move!");
               this.attributeDrawer = true;
               // 将物体属性的值给currentObject
@@ -247,10 +258,10 @@
           //对象移动期间，设置透明度
           'object:moving': (e) => {
             e.target.opacity = 0.5;
-            this.isObjClicked = false;
           },
           'object:modified': (e) => {
             e.target.opacity = 1;
+            this.isObjClicked = false;
           },
         });
       },
@@ -398,6 +409,7 @@
 
       currentObjAttribute(fabricObj) {
         this.currentObj.obj = fabricObj;
+        this.currentObj.type = fabricObj.get('type');
         this.currentObj.id = fabricObj.get('name');
         this.currentObj.newid = fabricObj.get('name');
         this.currentObj.left = fabricObj.get('left');
@@ -405,6 +417,7 @@
         this.currentObj.angle = fabricObj.get('angle');
         this.currentObj.height = fabricObj.get('height');
         this.currentObj.width = fabricObj.get('width');
+        this.currentObj.radius = fabricObj.get('radius');
         this.currentObj.flipX = fabricObj.get('flipX');
         this.currentObj.flipY = fabricObj.get('flipY');
         this.currentObj.color = fabricObj.get('stroke');
@@ -450,11 +463,14 @@
             break;
           case 'flipX':
             console.log(this.currentObj.flipX);
-            this.currentObj.obj.set({flipX:this.currentObj.flipX});
+            this.currentObj.obj.set({flipX: this.currentObj.flipX});
             console.log(this.currentObj.flipX);
             break;
           case 'flipY':
             this.currentObj.obj.set({flipY: this.currentObj.flipY});
+            break;
+          case 'radius':
+            this.currentObj.obj.set({radius: this.currentObj.radius});
             break;
           default:
             break;
@@ -481,8 +497,10 @@
 
 <style>
   .el-main {
-    background-color: #E9EEF3;
-    top: 0px;
+    /*background-color: #E9EEF3;*/
+    background-color: #ffffff;
+    padding: 0px;
+    margin: 0px;
   }
 
   .el-aside {
@@ -492,10 +510,7 @@
   .el-header, .el-footer {
     background-color: #B3C0D1;
   }
-</style>
 
-
-<style>
   .attributeBlock {
     display: table;
   }
