@@ -119,7 +119,10 @@
         fabricCanvas: null,
         toolsArr: [
           {
-            name: 'choose'
+            name: 'choose',
+          },
+          {
+            name: 'draw',
           },
           {
             name: 'rectangle',
@@ -134,6 +137,10 @@
           {
             name: 'ellipse',
           },
+          {
+            name: 'text'
+          },
+
           {
             name: 'fill',
           },
@@ -165,10 +172,6 @@
         idNum: 0,//全局idNum，用于自动创建名称
         attributeDrawer: false,
         dashArray: [1, 0],
-        // {
-        //     line: 1,
-        //     blank: 0,
-        //   },
         currentObj: {
           obj: '',
           type: '',
@@ -190,6 +193,15 @@
           flipY: false,
           delete: false,
         },
+        textSetting: {
+          fontSize: 14,
+          fontWeight: 'normal',
+          underline: false,
+          overline: false,
+          linethrough: false,
+        },
+        lastTextObj:null,
+
       }
     },
     mounted() {
@@ -238,9 +250,6 @@
             if (o.target) {
               this.isObjClicked = true;
             }
-            // if (this.currentTool == 'text') {
-            //   this.drawText()
-            // }
             switch (this.currentTool) {
               case "remove":
                 //一次删除一个物体
@@ -250,13 +259,25 @@
                 if (o.target) {
                   o.target.set({fill: this.drawColor});
                 }
+                break;
+              case 'text':
+                this.lastTextObj = this.drawText();
+                while (!this.isIDUnique('text' + this.idNum++)) {
+                  this.idNum++;
+                }
+                this.lastTextObj.set({'name': 'text' + this.idNum});
+                this.idNum++;
+                this.fabricCanvas.add(this.lastTextObj);
+                this.lastTextObj.enterEditing();
+                this.setAllObjSelectable(false);
+                break;
+              //退出编辑模式
             }
           },
           'mouse:up': (o) => {
             this.mouseTo.x = o.pointer.x;
             this.mouseTo.y = o.pointer.y;
             this.updateModifications();
-            this.isDrawing = false;
             this.isDrawing = false;
             this.drawingObject = null;
             // 单击物体展开属性板
@@ -307,6 +328,9 @@
           this.fabricCanvas.remove(this.drawingObject)
         }
         this.setAllObjSelectable(false);
+        if(this.lastTextObj){
+          this.lastTextObj.exitEditing();
+        }
         let drawingObject = null;
         let name = '';
         switch (tool) {
@@ -438,28 +462,27 @@
         });
         return fabricObject;
       },
-
+      // 绘制文字对象
+      drawText() {
+        let fabricObj = new fabric.Textbox("", {
+          left: this.mouseFrom.x,
+          top: this.mouseFrom.y,
+          fill: this.drawColor,
+          fontSize: this.textSetting.fontSize,
+          fontWeight:this.textSetting.fontWeight,
+          overline:this.textSetting.overline,
+          underline:this.textSetting.underline,
+          linethrough:this.textSetting.linethrough,
+          hasControls: true,
+        });
+        return fabricObj;
+      },
       setAllObjSelectable(isSelectable) {
         this.fabricCanvas.forEachObject(function (obj) {
           obj.selectable = isSelectable;
         });
       },
 
-      //绘制文字对象
-      // drawText() {
-      //   this.textboxObj = new fabric.Textbox(" ", {
-      //     left: this.mouseFrom.x,
-      //     top: this.mouseFrom.y,
-      //     width: 220,
-      //     fontSize: 18,
-      //     fill: this.drawColor,
-      //     hasControls: true
-      //   });
-      //   this.fabricObj.add(this.textboxObj);
-      //   this.textboxObj.enterEditing();
-      //   this.textboxObj.hiddenTextarea.focus();
-      //   this.updateModifications(true)
-      // },
       addPredefineColor(color) {
         let len = this.predefineColors.length;
         //检查该颜色是否已经存在了，存在的话则不进行添加
@@ -567,7 +590,6 @@
       ErrorMessage(message) {
         this.$message.error(message);
       }
-
     },
   }
 </script>
