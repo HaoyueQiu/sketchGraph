@@ -3,14 +3,23 @@
     <el-container>
       <el-header><p>"this is SketchGraph"</p></el-header>
       <el-container>
-        <el-aside width="200px">
+        <el-aside width="300px">
           <p>This a control panel</p>
           <el-color-picker v-model="drawColor" show-alpha :predefine="predefineColors"
                            @change="addPredefineColor(drawColor)"></el-color-picker>
+
           <div class="block">
             <span>画笔粗细</span>
             <el-slider v-model="drawWidth" :min=1></el-slider>
           </div>
+
+          <div class="block">
+            <span>虚线设置：实线</span>
+            <el-slider v-model="dashArray[0]" :min=1></el-slider>
+            <span>虚线设置：空白</span>
+            <el-slider v-model="dashArray[1]" :min=0></el-slider>
+          </div>
+
           <el-button-group>
             <div v-for="(tool,idx) in toolsArr" :key="idx"
                  @click="handleTools(tool.name)">
@@ -43,7 +52,7 @@
                   @blur="changeAttribute('top')"></el-input>
       </div>
 
-      <div v-if="currentObj.type=='rect'" class="attributeBlock">
+      <div v-if="currentObj.type=='rect' || currentObj.type=='line'" class="attributeBlock">
         <span class="attributeSpan">width</span>
         <el-input type="number" v-model="currentObj.width" min="0" @blur="changeAttribute('width')"></el-input>
         <span class="attributeSpan">height</span>
@@ -52,6 +61,12 @@
       <div v-else-if="currentObj.type=='circle'" class="attributeBlock">
         <span class="attributeSpan">radius</span>
         <el-input type="number" v-model="currentObj.radius" min="0" @blur="changeAttribute('radius')"></el-input>
+      </div>
+      <div v-else-if="currentObj.type=='ellipse'" class="attributeBlock">
+        <span class="attributeSpan">rx</span>
+        <el-input type="number" v-model="currentObj.rx" min="0" @blur="changeAttribute('rx')"></el-input>
+        <span class="attributeSpan">ry</span>
+        <el-input type="number" v-model="currentObj.ry" min="0" @blur="changeAttribute('ry')"></el-input>
       </div>
 
       <div class="attributeBlock">
@@ -71,11 +86,12 @@
                          @change="changeAttribute('strokeColor')"></el-color-picker>
       </div>
 
-      <div class="attributeBlock">
+      <div v-if="currentObj.type!='line'" class="attributeBlock">
         <span class="attributeSpan">填充颜色</span>
         <el-color-picker v-model="currentObj.fillColor" show-alpha :predefine="predefineColors"
                          @change="changeAttribute('fillColor')"></el-color-picker>
       </div>
+
 
       <div class="attributeBlock">
         <span class="attributeSpan">水平翻转</span>
@@ -110,6 +126,9 @@
             icon: ' el-icon-delete'
           },
           {
+            name: 'line',
+          },
+          {
             name: 'circle',
           },
           {
@@ -118,10 +137,6 @@
           {
             name: 'fill',
           },
-          // {
-          //   name: 'line',
-          //   icon: ' el-icon-edit'
-          // },
           {
             name: 'clear',
           },
@@ -149,6 +164,11 @@
         isObjClicked: false, //判断是否单击并且没有移动物体
         idNum: 0,//全局idNum，用于自动创建名称
         attributeDrawer: false,
+        dashArray: [1, 0],
+        // {
+        //     line: 1,
+        //     blank: 0,
+        //   },
         currentObj: {
           obj: '',
           type: '',
@@ -162,12 +182,13 @@
           top: 0,
           height: 0,
           width: 0,
-          radius:0,
+          radius: 0,
+          rx: 0,
+          ry: 0,
           angle: 0,
           flipX: false,
           flipY: false,
           delete: false,
-
         },
       }
     },
@@ -178,7 +199,7 @@
     computed: {
       canvasWidth() {
         // 硬编码 侧边栏宽度...........
-        return window.innerWidth - 200 - 30;
+        return window.innerWidth - 300 - 30;
       }
     },
     methods: {
@@ -285,7 +306,7 @@
         if (this.drawingObject) {
           this.fabricCanvas.remove(this.drawingObject)
         }
-        this.setAllObjSelectable(true);
+        this.setAllObjSelectable(false);
         let drawingObject = null;
         let name = '';
         switch (tool) {
@@ -293,14 +314,20 @@
             this.resetCanvas();
             break;
           case 'rectangle':
-            this.setAllObjSelectable(false);
             drawingObject = this.drawRectangle();
             name = 'rectangle';
             break;
+          case 'line':
+            drawingObject = this.drawLine();
+            name = 'line';
+            break;
           case 'circle':
-            this.setAllObjSelectable(false);
             drawingObject = this.drawCircle();
             name = 'circle';
+            break;
+          case 'ellipse':
+            drawingObject = this.drawEllipse();
+            name = 'ellipse';
             break;
           case 'redo':
             this.redo();
@@ -308,14 +335,24 @@
           case 'undo':
             this.undo();
             break;
+          case 'remove':
+            this.setAllObjSelectable(true);
+            break;
+          case 'choose':
+            this.setAllObjSelectable(true);
+            break;
           default:
             break;
         }
         if (drawingObject && this.isDrawing) {
+          while (!this.isIDUnique(name + this.idNum++)) {
+            this.idNum++;
+          }
           drawingObject.set({'name': name + this.idNum});
           this.idNum++;
           this.fabricCanvas.add(drawingObject);
           this.drawingObject = drawingObject;
+          this.setAllObjSelectable(false);
         }
       },
       // 储存操作记录
@@ -344,6 +381,7 @@
           this.step -= 1;
         }
       },
+
       drawRectangle() {
         let width = this.mouseTo.x - this.mouseFrom.x;
         let height = this.mouseTo.y - this.mouseFrom.y;
@@ -353,6 +391,16 @@
           fill: "rgba(255, 255, 255, 0)",
           stroke: this.drawColor,
           strokeWidth: this.drawWidth,
+          strokeDashArray: this.dashArray,
+        });
+        return drawingObject;
+      },
+
+      drawLine() {
+        let drawingObject = new fabric.Line([this.mouseFrom.x, this.mouseFrom.y, this.mouseTo.x, this.mouseTo.y], {
+          stroke: this.drawColor,
+          strokeWidth: this.drawWidth,
+          strokeDashArray: this.dashArray,
         });
         return drawingObject;
       },
@@ -368,10 +416,29 @@
           stroke: this.drawColor,
           fill: "rgba(255, 255, 255, 0)",
           radius: radius,
-          strokeWidth: this.drawWidth
+          strokeWidth: this.drawWidth,
+          strokeDashArray: this.dashArray,
         });
         return fabricObject;
       },
+      drawEllipse() {
+        let left = this.mouseFrom.x;
+        let top = this.mouseFrom.y;
+        let fabricObject = new fabric.Ellipse({
+          left: left,
+          top: top,
+          stroke: this.drawColor,
+          fill: "rgba(255, 255, 255, 0)",
+          originX: "center",
+          originY: "center",
+          rx: Math.abs(left - this.mouseTo.x),
+          ry: Math.abs(top - this.mouseTo.y),
+          strokeWidth: this.drawWidth,
+          strokeDashArray: this.dashArray,
+        });
+        return fabricObject;
+      },
+
       setAllObjSelectable(isSelectable) {
         this.fabricCanvas.forEachObject(function (obj) {
           obj.selectable = isSelectable;
@@ -418,11 +485,13 @@
         this.currentObj.height = fabricObj.get('height');
         this.currentObj.width = fabricObj.get('width');
         this.currentObj.radius = fabricObj.get('radius');
+        this.currentObj.rx = fabricObj.get('rx');
+        this.currentObj.ry = fabricObj.get('ry');
         this.currentObj.flipX = fabricObj.get('flipX');
         this.currentObj.flipY = fabricObj.get('flipY');
-        this.currentObj.color = fabricObj.get('stroke');
+        this.currentObj.strokeColor = fabricObj.get('stroke');
         this.currentObj.strokeWidth = fabricObj.get('strokeWidth');
-        this.currentObj.fill = fabricObj.get('fill');
+        this.currentObj.fillColor = fabricObj.get('fill');
       },
 
       changeID() {
@@ -434,6 +503,7 @@
         }
         this.currentObj.obj.set({'name': this.currentObj.newid});
       },
+
       changeAttribute(attr) {
         switch (attr) {
           case 'left':
@@ -472,11 +542,18 @@
           case 'radius':
             this.currentObj.obj.set({radius: this.currentObj.radius});
             break;
+          case 'rx':
+            this.currentObj.obj.set({rx: this.currentObj.rx});
+            break;
+          case 'ry':
+            this.currentObj.obj.set({ry: this.currentObj.ry});
+            break;
           default:
             break;
         }
         this.fabricCanvas.renderAll();
       },
+
       isIDUnique(id) {
         let objects = this.fabricCanvas.getObjects();
         let len = objects.length;

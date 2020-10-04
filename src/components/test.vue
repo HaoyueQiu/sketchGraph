@@ -8,7 +8,7 @@
   import {fabric} from 'fabric'
 
   export default {
-    name:'Test',
+    name: 'Test',
     mounted() {
       this.initCanvas();
     },
@@ -17,18 +17,29 @@
         var canvas = new fabric.Canvas('canvas');
         // create a rectangle object
         var rect = new fabric.Rect({
+          strokeDashArray:[10,2],
           left: 100,
           top: 100,
           fill: 'red',
           width: 20,
           height: 20
         });
-        console.log("test!")
-        canvas.add(rect);
-        canvas.setWidth(2000);
-        canvas.setHeight(500);
+        console.log("test!");
+        canvas.setWidth(1500);
+        canvas.setHeight(600);
+        new fabric.Line
+        let doshedLine = new fabric.Line([20, 30, 300, 200,], {
+          strokeDashArray: [100, 0],
+          stroke: '#000000',
+          strokeWidth: 3,
+        });
+        doshedLine.set({height:800,width:1000})
+        console.log(doshedLine.get('strokeDashArray'))
+        // console.log(doshedLine.get('points'));
+        canvas.add(doshedLine);
+        canvas.add(rect)
         // rect.set({'left':400})
-        rect.set({stroke:'blue'});
+        rect.set({stroke: 'blue'});
       }
     }
   }
