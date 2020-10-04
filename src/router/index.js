@@ -4,7 +4,7 @@ import HelloWorld from '@/components/HelloWorld'
 import Test from '@/components/test'
 import Sketchpad from'@/components/Sketchpad'
 import SketchGraph from'@/components/SketchGraph'
-Vue.use(Router)
+Vue.use(Router);
 
 export default new Router({
   routes: [

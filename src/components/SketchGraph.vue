@@ -36,50 +36,52 @@
 
       <div class="attributeBlock">
         <span class="attributeSpan">x</span>
-        <el-input type="number" v-model="currentObj.left" min="0" :max="canvasWidth" @blur="changeLeft()"></el-input>
+        <el-input type="number" v-model="currentObj.left" min="0" :max="canvasWidth"
+                  @blur="changeAttribute('left')"></el-input>
         <span class="attributeSpan">y</span>
-        <el-input type="number" v-model="currentObj.top" min="0" :max="canvasWidth" @blur="changeTop()"></el-input>
+        <el-input type="number" v-model="currentObj.top" min="0" :max="canvasWidth"
+                  @blur="changeAttribute('top')"></el-input>
       </div>
 
       <div class="attributeBlock">
         <span class="attributeSpan">width</span>
-        <el-input type="number" v-model="currentObj.width" min="0" @blur="changeWidth()"></el-input>
+        <el-input type="number" v-model="currentObj.width" min="0" @blur="changeAttribute('width')"></el-input>
         <span class="attributeSpan">height</span>
-        <el-input type="number" v-model="currentObj.height" min="0" @blur="changeHeight()"></el-input>
+        <el-input type="number" v-model="currentObj.height" min="0" @blur="changeAttribute('height')"></el-input>
       </div>
 
       <div class="attributeBlock">
         <span class="attributeSpan">角度</span>
-        <el-input type="number" v-model="currentObj.angle" min="0" @blur="changeAngle()"></el-input>
+        <el-input type="number" v-model="currentObj.angle" min="0" @blur="changeAttribute('angle')"></el-input>
       </div>
 
       <div class="attributeBlock">
         <span class="attributeSpan">画笔粗细</span>
-        <el-input type="number" v-model="currentObj.strokeWidth" min="0" @blur="changeStrokeWidth()"></el-input>
+        <el-input type="number" v-model="currentObj.strokeWidth" min="0" @blur="changeAttribute('strokeWidth')"></el-input>
       </div>
 
       <div class="attributeBlock">
         <span class="attributeSpan">画笔颜色</span>
-        <el-color-picker v-model="currentObj.color" show-alpha :predefine="predefineColors"
-                         @change="changeStrorkeColor()"></el-color-picker>
+        <el-color-picker v-model="currentObj.strokeColor" show-alpha :predefine="predefineColors"
+                         @change="changeAttribute('strokeColor')"></el-color-picker>
       </div>
 
       <div class="attributeBlock">
         <span class="attributeSpan">填充颜色</span>
-        <el-color-picker v-model="currentObj.fill" show-alpha :predefine="predefineColors"
-                         @change="changeFillColor()"></el-color-picker>
+        <el-color-picker v-model="currentObj.fillColor" show-alpha :predefine="predefineColors"
+                         @change="changeAttribute('fillColor')"></el-color-picker>
       </div>
 
       <div class="attributeBlock">
         <span class="attributeSpan">水平翻转</span>
         <el-switch v-model="currentObj.flipX" active-color="#13ce66" inactive-color="#888888"
-                   @blur="changeFlipX()"></el-switch>
+                   @change="changeAttribute('flipX')"></el-switch>
       </div>
 
       <div class="attributeBlock">
         <span class="attributeSpan">垂直翻转</span>
         <el-switch v-model="currentObj.flipY" active-color="#13ce66" inactive-color="#888888"
-                   @blur="changeFlipY()"></el-switch>
+                   @change="changeAttribute('flipY')"></el-switch>
       </div>
     </el-drawer>
   </div>
@@ -144,9 +146,9 @@
           //id、颜色、画笔粗细、填充、位置、大小(宽、高)、是否删除、旋转角度、翻转(flipX flipY)
           id: '00',
           newid: '00',
-          color: 'rgba(0, 0, 0, 1)',
+          strokeColor: 'rgba(0, 0, 0, 1)',
           strokeWidth: 0,
-          fill: 'rgba(0, 0, 0, 0)',
+          fillColor: 'rgba(0, 0, 0, 0)',
           left: 0,
           top: 0,
           height: 0,
@@ -382,6 +384,7 @@
       // },
       addPredefineColor(color) {
         let len = this.predefineColors.length;
+        //检查该颜色是否已经存在了，存在的话则不进行添加
         for (let i = 0; i < len; ++i) {
           if (color == this.predefineColors[i]) {
             return;
@@ -418,40 +421,46 @@
         }
         this.currentObj.obj.set({'name': this.currentObj.newid});
       },
-      changeAttribute(attr, value) {
-
-        this.currentObj.obj.set({attr: value});
+      changeAttribute(attr) {
+        switch (attr) {
+          case 'left':
+            this.currentObj.obj.set({left: Number(this.currentObj.left)});
+            break;
+          case 'top':
+            this.currentObj.obj.set({top: Number(this.currentObj.top)});
+            break;
+          case 'width':
+            this.currentObj.obj.set({width: Number(this.currentObj.width)});
+            break;
+          case 'height':
+            this.currentObj.obj.set({height: Number(this.currentObj.height)});
+            break;
+          case 'angle':
+            this.currentObj.obj.set({angle: Number(this.currentObj.angle)});
+            break;
+          case 'strokeWidth':
+            this.currentObj.obj.set({strokeWidth: Number(this.currentObj.strokeWidth)});
+            break;
+          case 'strokeColor':
+            console.log(this.currentObj.strokeColor)
+            this.currentObj.obj.set({stroke: this.currentObj.strokeColor});
+            break;
+          case 'fillColor':
+            this.currentObj.obj.set({fill: this.currentObj.fillColor});
+            break;
+          case 'flipX':
+            console.log(this.currentObj.flipX);
+            this.currentObj.obj.set({flipX:this.currentObj.flipX});
+            console.log(this.currentObj.flipX);
+            break;
+          case 'flipY':
+            this.currentObj.obj.set({flipY: this.currentObj.flipY});
+            break;
+          default:
+            break;
+        }
         this.fabricCanvas.renderAll();
       },
-      changeLeft() {
-        this.currentObj.obj.set({left: Number(this.currentObj.left)});
-        this.fabricCanvas.renderAll();
-      },
-      changeTop() {
-        this.currentObj.obj.set({top: this.currentObj.top});
-        this.fabricCanvas.renderAll();
-        // this.currentObj.obj.setCoords({top: this.currentObj.top});
-      },
-      changeWidth() {
-        this.currentObj.obj.set({width: this.currentObj.width});
-        this.fabricCanvas.renderAll();
-      },
-      changeHeight() {
-        this.currentObj.obj.set({width: this.currentObj.width});
-        this.fabricCanvas.renderAll();
-      },
-// changeAngle()
-// changeStrokeWidth()
-//changeStrorkeColor()
-      changeFillColor() {
-        console.log("change fill color");
-        this.currentObj.obj.set({fill: this.currentObj.fill});
-        this.fabricCanvas.renderAll();
-      },
-
-
-// changeFlipX()
-// changeFlipY()
       isIDUnique(id) {
         let objects = this.fabricCanvas.getObjects();
         let len = objects.length;
@@ -462,8 +471,6 @@
         }
         return true;
       },
-      //改变其它属性时进行绑定！！
-
       ErrorMessage(message) {
         this.$message.error(message);
       }

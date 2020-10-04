@@ -15,7 +15,6 @@
     methods: {
       initCanvas() {
         var canvas = new fabric.Canvas('canvas');
-
         // create a rectangle object
         var rect = new fabric.Rect({
           left: 100,
@@ -24,10 +23,12 @@
           width: 20,
           height: 20
         });
-
-// "add" rectangle onto canvas
+        console.log("test!")
         canvas.add(rect);
-        rect.set({left:400})
+        canvas.setWidth(2000);
+        canvas.setHeight(500);
+        // rect.set({'left':400})
+        rect.set({stroke:'blue'});
       }
     }
   }
