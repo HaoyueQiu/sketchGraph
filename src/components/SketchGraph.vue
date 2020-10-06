@@ -140,7 +140,7 @@
 
 
       </div>
-<!--文本属性面板-->
+      <!--文本属性面板-->
       <div v-if="currentObj.type=='text'">
         <div class="attributeBlock">
           <span class="attributeSpan">文本内容</span>
@@ -178,7 +178,7 @@
         </div>
       </div>
 
-<!--   图片属性面板-->
+      <!--   图片属性面板-->
       <div v-else>
       </div>
 
@@ -246,6 +246,15 @@
           {
             name: 'undo',
           },
+          {
+            name: 'save2JSON',
+          },
+          {
+            name:'save2PNG'
+          },
+          {
+            name:'save2JPG'
+          }
 
         ],
         mouseFrom: {}, //记录鼠标的移动
@@ -269,7 +278,6 @@
         currentObj: {
           obj: '',
           type: '',
-          //id、颜色、画笔粗细、填充、位置、大小(宽、高)、是否删除、旋转角度、翻转(flipX flipY)
           id: '00',
           newid: '00',
           strokeColor: 'rgba(0, 0, 0, 1)',
@@ -294,7 +302,7 @@
           lineThrough: false,
         },
         textSetting: {
-          fontSize: 14,
+          fontSize: 25,
           fontWeight: 'normal',
           underline: false,
           overline: false,
@@ -366,6 +374,7 @@
                 while (!this.isIDUnique('text' + this.idNum++)) {
                   this.idNum++;
                 }
+                this.isDrawing=false;
                 this.lastTextObj.set({'id': 'text' + this.idNum});
                 this.idNum++;
                 this.fabricCanvas.add(this.lastTextObj);
@@ -418,6 +427,7 @@
         this.isDrawing = false;
       },
       handleTools(tool) {
+        console.log(tool);
         this.currentTool = tool;
         if (this.drawingObject) {
           this.fabricCanvas.remove(this.drawingObject)
@@ -468,6 +478,14 @@
           case 'text':
             this.activeName = 'fontSettings';
             break;
+          case 'save2JSON':
+            this.savetoJSON();
+            break;
+          case 'save2PNG':
+            this.savetoImg('png');
+            break;
+          case 'save2JPG':
+            this.savetoImg('jpg');
           default:
             break;
         }
@@ -736,11 +754,11 @@
           canvas.add(oImg);
           let id = 'image' + idNum;
           idNum++;
-          while(!isIDUnique(id)){
+          while (!isIDUnique(id)) {
             idNum++;
             id = 'image' + idNum;
           }
-          oImg.set({'id':id});
+          oImg.set({'id': id});
         });
         this.idNum = idNum;
 
@@ -754,6 +772,23 @@
         reader.onload = () => {
           this.imgSrc = reader.result;
         }
+      },
+
+      savetoJSON() {
+        let canvas = JSON.stringify(this.fabricCanvas);
+        var a = document.createElement('a');
+        a.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(canvas));
+        a.setAttribute('download', 'sketchGraph'+this.idNum+'.json');
+        this.idNum++;
+        a.click()
+      },
+      savetoImg(type) {
+        let canvasURL = this.fabricCanvas.toDataURL(type);
+        var a = document.createElement('a');
+        a.setAttribute('href', canvasURL);
+        a.setAttribute('download', 'sketchGraph'+this.idNum+'.'+type);
+        this.idNum++;
+        a.click()
       },
     },
   }

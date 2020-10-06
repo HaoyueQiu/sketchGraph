@@ -45,10 +45,18 @@
           this.imgSrc = reader.result;
         }
       },
+      saveText(text, filename) {
+        var a = document.createElement('a');
+        a.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        a.setAttribute('download', filename);
+        a.click()
+      },
       initCanvas() {
         this.canvas = new fabric.Canvas('canvas');
         this.canvas.setWidth(1500);
         this.canvas.setHeight(600);
+        var obj = {a: "Hello", b: "World"};
+        this.saveText(JSON.stringify(obj), "filename.json");
       },
     },
 
