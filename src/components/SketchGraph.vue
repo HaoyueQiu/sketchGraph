@@ -329,11 +329,11 @@
         //绑定画板事件，对鼠标的各个操作进行监听
         this.fabricCanvasEvent();
         // 可以通过名称来获取fabricObject
-        fabric.Canvas.prototype.getItemByName = function (name) {
+        fabric.Canvas.prototype.getItemByID = function (ID) {
           let object = null,
             objects = this.getObjects();
           for (let i = 0, len = this.size(); i < len; i++) {
-            if (objects[i].name && objects[i].name === name) {
+            if (objects[i].id && objects[i].id === ID) {
               object = objects[i];
               break;
             }
@@ -366,7 +366,7 @@
                 while (!this.isIDUnique('text' + this.idNum++)) {
                   this.idNum++;
                 }
-                this.lastTextObj.set({'name': 'text' + this.idNum});
+                this.lastTextObj.set({'id': 'text' + this.idNum});
                 this.idNum++;
                 this.fabricCanvas.add(this.lastTextObj);
                 this.lastTextObj.enterEditing();
@@ -475,7 +475,7 @@
           while (!this.isIDUnique(name + this.idNum++)) {
             this.idNum++;
           }
-          drawingObject.set({'name': name + this.idNum});
+          drawingObject.set({'id': name + this.idNum});
           this.idNum++;
           this.fabricCanvas.add(drawingObject);
           this.drawingObject = drawingObject;
@@ -611,8 +611,8 @@
       currentObjAttribute(fabricObj) {
         this.currentObj.obj = fabricObj;
         this.currentObj.type = fabricObj.get('type');
-        this.currentObj.id = fabricObj.get('name');
-        this.currentObj.newid = fabricObj.get('name');
+        this.currentObj.id = fabricObj.get('id');
+        this.currentObj.newid = fabricObj.get('id');
         this.currentObj.left = fabricObj.get('left');
         this.currentObj.top = fabricObj.get('top');
         this.currentObj.angle = fabricObj.get('angle');
@@ -642,7 +642,7 @@
           this.currentObj.newid = this.currentObj.id;
           return;
         }
-        this.currentObj.obj.set({'name': this.currentObj.newid});
+        this.currentObj.obj.set({'id': this.currentObj.newid});
       },
 
       changeAttribute(attr) {
@@ -717,7 +717,7 @@
         let objects = this.fabricCanvas.getObjects();
         let len = objects.length;
         for (let i = 0; i < len; ++i) {
-          if (objects[i].get('name') == id) {
+          if (objects[i].get('id') == id) {
             return false;
           }
         }
