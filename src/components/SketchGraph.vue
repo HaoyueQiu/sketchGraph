@@ -29,6 +29,13 @@
                   <el-button type="primary"> {{tool.name}}</el-button>
                 </div>
               </el-button-group>
+
+              <el-upload drag action="" multiple :show-file-list="false"
+                         :on-change="getLocalImgSrc"
+                         :on-error="addImg">
+                <i class="el-icon-upload"></i>
+                <div class="el-upload__text">将图片拖到此处，或<em>点击上传</em></div>
+              </el-upload>
             </el-tab-pane>
 
             <el-tab-pane label="文本设置" name="fontSettings">
@@ -72,7 +79,6 @@
       </el-container>
     </el-container>
 
-
     <el-drawer title="属性" :visible.sync="attributeDrawer" direction="rtl" size="30%">
       <div class="attributeBlock">
         <span class="attributeSpan">名称(唯一):</span>
@@ -88,9 +94,12 @@
                   @blur="changeAttribute('top')"></el-input>
       </div>
 
-      <div v-if="currentObj.type!='textbox'">
+      <div class="attributeBlock">
+        <span class="attributeSpan">角度</span>
+        <el-input type="number" v-model="currentObj.angle" min="0" @blur="changeAttribute('angle')"></el-input>
+      </div>
 
-
+      <div v-if="currentObj.type!='textbox' && currentObj.type!='image'">
         <div v-if="currentObj.type=='rect' || currentObj.type=='line'" class="attributeBlock">
           <span class="attributeSpan">width</span>
           <el-input type="number" v-model="currentObj.width" min="0" @blur="changeAttribute('width')"></el-input>
@@ -110,10 +119,6 @@
           <el-input type="number" v-model="currentObj.ry" min="0" @blur="changeAttribute('ry')"></el-input>
         </div>
 
-        <div class="attributeBlock">
-          <span class="attributeSpan">角度</span>
-          <el-input type="number" v-model="currentObj.angle" min="0" @blur="changeAttribute('angle')"></el-input>
-        </div>
 
         <div class="attributeBlock">
           <span class="attributeSpan">画笔粗细</span>
@@ -134,20 +139,9 @@
         </div>
 
 
-        <div class="attributeBlock">
-          <span class="attributeSpan">水平翻转</span>
-          <el-switch v-model="currentObj.flipX" active-color="#13ce66" inactive-color="#888888"
-                     @change="changeAttribute('flipX')"></el-switch>
-        </div>
-
-        <div class="attributeBlock">
-          <span class="attributeSpan">垂直翻转</span>
-          <el-switch v-model="currentObj.flipY" active-color="#13ce66" inactive-color="#888888"
-                     @change="changeAttribute('flipY')"></el-switch>
-        </div>
       </div>
-
-      <div v-else>
+<!--文本属性面板-->
+      <div v-if="currentObj.type=='text'">
         <div class="attributeBlock">
           <span class="attributeSpan">文本内容</span>
           <el-input type="textarea" autosize v-model="currentObj.text" @blur="changeAttribute('text')"></el-input>
@@ -182,6 +176,22 @@
           <el-switch v-model="currentObj.lineThrough" active-color="#13ce66"
                      inactive-color="#888888" @change="changeAttribute('lineThrough')"></el-switch>
         </div>
+      </div>
+
+<!--   图片属性面板-->
+      <div v-else>
+      </div>
+
+      <div class="attributeBlock">
+        <span class="attributeSpan">水平翻转</span>
+        <el-switch v-model="currentObj.flipX" active-color="#13ce66" inactive-color="#888888"
+                   @change="changeAttribute('flipX')"></el-switch>
+      </div>
+
+      <div class="attributeBlock">
+        <span class="attributeSpan">垂直翻转</span>
+        <el-switch v-model="currentObj.flipY" active-color="#13ce66" inactive-color="#888888"
+                   @change="changeAttribute('flipY')"></el-switch>
       </div>
     </el-drawer>
 
@@ -235,7 +245,7 @@
           },
           {
             name: 'undo',
-          }
+          },
 
         ],
         mouseFrom: {}, //记录鼠标的移动
@@ -253,9 +263,9 @@
         attributeDrawer: false,
         dashArray: [1, 0],
         //阴影特性
-        shadowColor:'rgba(0, 0, 0, 0)',
-        shadowOffsetX:0,
-        shadowOffsetY:0,
+        shadowColor: 'rgba(0, 0, 0, 0)',
+        shadowOffsetX: 0,
+        shadowOffsetY: 0,
         currentObj: {
           obj: '',
           type: '',
@@ -292,6 +302,7 @@
         },
         lastTextObj: null,
         activeName: 'controlPanel',
+        imgSrc: '',
       }
     },
     mounted() {
@@ -503,7 +514,7 @@
       freeDraw() {
         this.fabricCanvas.freeDrawingBrush.width = this.drawWidth;
         this.fabricCanvas.freeDrawingBrush.color = this.drawColor;
-        this.fabricCanvas.freeDrawingBrush.strokeDashArray=this.dashArray;
+        this.fabricCanvas.freeDrawingBrush.strokeDashArray = this.dashArray;
       },
 
       drawRectangle() {
@@ -714,14 +725,42 @@
       },
       ErrorMessage(message) {
         this.$message.error(message);
-      }
+      },
+
+      addImg() {
+        let canvas = this.fabricCanvas;
+        let idNum = this.idNum;
+        console.log(this.idNum);
+        let isIDUnique = this.isIDUnique;
+        fabric.Image.fromURL(this.imgSrc, function (oImg) {
+          canvas.add(oImg);
+          let id = 'image' + idNum;
+          idNum++;
+          while(!isIDUnique(id)){
+            idNum++;
+            id = 'image' + idNum;
+          }
+          oImg.set({'id':id});
+        });
+        this.idNum = idNum;
+
+        console.log(this.idNum);
+        this.setAllObjSelectable(false);
+      },
+      getLocalImgSrc(event) {
+        let reader = new FileReader();
+        reader.readAsDataURL(event.raw);
+        // 转换成功后的操作，reader.result即为转换后的DataURL ，
+        reader.onload = () => {
+          this.imgSrc = reader.result;
+        }
+      },
     },
   }
 </script>
 
 <style>
   .el-main {
-    /*background-color: #E9EEF3;*/
     background-color: #ffffff;
     padding: 0px;
     margin: 0px;
@@ -744,4 +783,13 @@
     vertical-align: middle;
   }
 
+  #my-img {
+    width: 0.1px;
+    height: 0.1px;
+    display: none;
+  }
+
+  .el-upload-dragger {
+    width: 300px;
+  }
 </style>

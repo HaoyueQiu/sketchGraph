@@ -1,6 +1,17 @@
 <template>
   <div class="canvas-wraper">
     <canvas id="canvas" ref="canvas"></canvas>
+    <el-upload
+      drag
+      action=""
+      multiple
+      :show-file-list="false"
+      :file-list="fileList"
+      :on-change="getLocalImgSrc"
+      :on-error="addImg">
+      <i class="el-icon-upload"></i>
+      <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+    </el-upload>
   </div>
 
 </template>
@@ -9,60 +20,48 @@
 
   export default {
     name: 'Test',
+    data() {
+      return {
+        imgSrc: '',
+        fileList: [],
+        canvas: null,
+      }
+    },
     mounted() {
       this.initCanvas();
     },
     methods: {
+      addImg() {
+        let canvas = this.canvas;
+        fabric.Image.fromURL(this.imgSrc, function (oImg) {
+          canvas.add(oImg);
+        });
+      },
+      getLocalImgSrc(event) {
+        let reader = new FileReader();
+        reader.readAsDataURL(event.raw);
+        // 转换成功后的操作，reader.result即为转换后的DataURL ，
+        reader.onload = () => {
+          this.imgSrc = reader.result;
+        }
+      },
       initCanvas() {
-        var canvas = new fabric.Canvas('canvas');
-        // create a rectangle object
-        var rect = new fabric.Rect({
-          strokeDashArray:[10,2],
-          left: 100,
-          top: 100,
-          fill: 'red',
-          width: 20,
-          height: 20
-        });
-        console.log("test!");
-        canvas.setWidth(1500);
-        canvas.setHeight(600);
-        // new fabric.Line
-        // let doshedLine = new fabric.Line([20, 30, 300, 200,], {
-        //   strokeDashArray: [100, 0],
-        //   stroke: '#000000',
-        //   strokeWidth: 3,
-        // });
-        // doshedLine.set({height:800,width:1000})
-        // console.log(doshedLine.get('strokeDashArray'))
-        // console.log(doshedLine.get('points'));
-        // canvas.add(doshedLine);
-        // canvas.add(rect);
-        // rect.set({'left':400})
-        // rect.set({stroke: 'blue'});
+        this.canvas = new fabric.Canvas('canvas');
+        this.canvas.setWidth(1500);
+        this.canvas.setHeight(600);
+      },
+    },
 
-
-        let fabricObj = new fabric.Textbox("hi", {
-          left: 30,
-          top: 30,
-          fontSize: 14,
-          fill: '#000000',
-          hasControls: true
-        });
-        canvas.add(fabricObj);
-        let text = fabricObj.get('text');
-        console.log(text);
-        fabricObj.enterEditing();
-        fabricObj.exitEditing();
-        // fabricObj.hiddenTextarea.focus();
-        // this.textboxObj.hiddenTextarea.focus();
-        // this.updateModifications(true)
-      }
-    }
   }
 </script>
 
 <style>
-
+  #my-img {
+    /*width: 300px;*/
+    /*height: 500px;*/
+    width: 0.1px;
+    height: 0.1px;
+    display: none;
+  }
 
 </style>
