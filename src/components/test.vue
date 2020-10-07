@@ -61,11 +61,25 @@
         this.canvas.setWidth(1500);
         this.canvas.setHeight(600);
         var obj = {a: "Hello", b: "World"};
-        this.saveText(JSON.stringify(obj), "filename.json");
-        for(let key in this.A){
-          this.A[key] = 10;
-        }
-        console.log(this.A.A);
+        let rect = new fabric.Rect({
+          left:10,
+          top:10,
+          width:300,
+          height:300,
+        });
+
+        this.canvas.add(rect);
+        let x = 'width';
+        let y = {};
+        y[x] = Number('40');
+        rect.set(y);
+        console.log(y);
+        // rect.setCoords();
+        // this.saveText(JSON.stringify(obj), "filename.json");
+        // for(let key in this.A){
+        //   this.A[key] = 10;
+        // }
+        // console.log(this.A.A);
 
       },
     },

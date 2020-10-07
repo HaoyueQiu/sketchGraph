@@ -379,7 +379,7 @@
                 break;
               case 'text':
                 this.lastTextObj = this.drawText();
-                this.setID(this.lastTextObj,'text');
+                this.setID(this.lastTextObj, 'text');
                 this.isDrawing = false;
                 this.fabricCanvas.add(this.lastTextObj);
                 this.lastTextObj.enterEditing();
@@ -404,7 +404,7 @@
             if (this.currentTool == 'pencil') {
               console.log('pencil');
               let allObj = this.fabricCanvas.getObjects();
-              this.setID(allObj[allObj.length - 1],'path');
+              this.setID(allObj[allObj.length - 1], 'path');
             }
 
           },
@@ -499,7 +499,7 @@
             break;
         }
         if (drawingObject && this.isDrawing) {
-          this.setID(drawingObject,name);
+          this.setID(drawingObject, name);
           this.fabricCanvas.add(drawingObject);
           this.drawingObject = drawingObject;
           this.setAllObjSelectable(false);
@@ -544,8 +544,10 @@
         let width = this.mouseTo.x - this.mouseFrom.x;
         let height = this.mouseTo.y - this.mouseFrom.y;
         let drawingObject = new fabric.Rect({
-          top: this.mouseFrom.y, left: this.mouseFrom.x,
-          width: width, height: height,
+          top: this.mouseFrom.y,
+          left: this.mouseFrom.x,
+          width: width,
+          height: height,
           fill: "rgba(255, 255, 255, 0)",
           stroke: this.drawColor,
           strokeWidth: this.drawWidth,
@@ -632,12 +634,12 @@
       },
 
       currentObjAttribute(fabricObj) {
-        this.currentObj.obj = fabricObj;
-        this.currentObj.id = fabricObj.get('id');
-        for(let key in this.currentObj){
+
+        for (let key in this.currentObj) {
           this.currentObj[key] = fabricObj.get(key);
         }
         this.currentObj.newid = fabricObj.get('id');
+        this.currentObj.obj = fabricObj;
       },
 
       changeID() {
@@ -651,65 +653,32 @@
       },
 
       changeAttribute(attr) {
+        let attrDict = {};
         switch (attr) {
           case 'left':
-            this.currentObj.obj.set({left: Number(this.currentObj.left)});
-            break;
           case 'top':
-            this.currentObj.obj.set({top: Number(this.currentObj.top)});
-            break;
           case 'width':
-            this.currentObj.obj.set({width: Number(this.currentObj.width)});
-            break;
           case 'height':
-            this.currentObj.obj.set({height: Number(this.currentObj.height)});
-            break;
           case 'angle':
-            this.currentObj.obj.set({angle: Number(this.currentObj.angle)});
-            break;
           case 'strokeWidth':
-            this.currentObj.obj.set({strokeWidth: Number(this.currentObj.strokeWidth)});
+            attrDict[attr] = Number(this.currentObj[attr]);
+            this.currentObj.obj.set(attrDict);
             break;
           case 'stroke':
-            this.currentObj.obj.set({stroke: this.currentObj.stroke});
-            break;
           case 'fill':
-            this.currentObj.obj.set({fill: this.currentObj.fill});
-            break;
           case 'flipX':
-            console.log(this.currentObj.flipX);
-            this.currentObj.obj.set({flipX: this.currentObj.flipX});
-            console.log(this.currentObj.flipX);
-            break;
           case 'flipY':
-            this.currentObj.obj.set({flipY: this.currentObj.flipY});
-            break;
           case 'radius':
-            this.currentObj.obj.set({radius: this.currentObj.radius});
-            break;
           case 'rx':
-            this.currentObj.obj.set({rx: this.currentObj.rx});
-            break;
           case 'ry':
-            this.currentObj.obj.set({ry: this.currentObj.ry});
-            break;
           case 'fontSize':
-            this.currentObj.obj.set({fontSize: this.currentObj.fontSize});
-            break;
           case 'overline':
-            this.currentObj.obj.set({overline: this.currentObj.overline});
-            break;
           case 'underline':
-            this.currentObj.obj.set({underline: this.currentObj.underline});
-            break;
           case 'linethrough':
-            this.currentObj.obj.set({linethrough: this.currentObj.linethrough});
-            break;
           case 'text':
-            this.currentObj.obj.set({text: this.currentObj.text});
-            break;
           case 'fontWeight':
-            this.currentObj.obj.set({fontWeight: this.currentObj.fontWeight});
+            attrDict[attr] = this.currentObj[attr];
+            this.currentObj.obj.set(attrDict);
             break;
           default:
             break;
@@ -749,7 +718,7 @@
           // console.log('33333', this.imgSrc);
           fabric.Image.fromURL(this.imgSrc, function (oImg) {
             canvas.add(oImg);
-            setID(oImg,'image');
+            setID(oImg, 'image');
           });
           this.setAllObjSelectable(false);
         } else {
