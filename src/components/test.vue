@@ -28,6 +28,7 @@
         A:{
           A:4,
           B:3,
+          C:5,
         }
       }
     },
@@ -61,7 +62,11 @@
         this.canvas.setHeight(600);
         var obj = {a: "Hello", b: "World"};
         this.saveText(JSON.stringify(obj), "filename.json");
-        console.log(this.A['A']);
+        for(let key in this.A){
+          this.A[key] = 10;
+        }
+        console.log(this.A.A);
+
       },
     },
 

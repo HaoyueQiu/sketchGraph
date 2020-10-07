@@ -632,34 +632,12 @@
       },
 
       currentObjAttribute(fabricObj) {
-
         this.currentObj.obj = fabricObj;
-        this.currentObj.newid = fabricObj.get('id');
-        // for(let key in this.currentObj){
-        //   this.currentObj[key] = fabricObj.get(key);
-        // }
-        this.currentObj.type = fabricObj.get('type');
         this.currentObj.id = fabricObj.get('id');
-        console.log(this.currentObj.id);
-        this.currentObj.left = fabricObj.get('left');
-        this.currentObj.top = fabricObj.get('top');
-        this.currentObj.angle = fabricObj.get('angle');
-        this.currentObj.height = fabricObj.get('height');
-        this.currentObj.width = fabricObj.get('width');
-        this.currentObj.radius = fabricObj.get('radius');
-        this.currentObj.rx = fabricObj.get('rx');
-        this.currentObj.ry = fabricObj.get('ry');
-        this.currentObj.flipX = fabricObj.get('flipX');
-        this.currentObj.flipY = fabricObj.get('flipY');
-        this.currentObj.stroke = fabricObj.get('stroke');
-        this.currentObj.strokeWidth = fabricObj.get('strokeWidth');
-        this.currentObj.fill = fabricObj.get('fill');
-        this.currentObj.fontSize = fabricObj.get('fontSize');
-        this.currentObj.overline = fabricObj.get('overline');
-        this.currentObj.underline = fabricObj.get('underline');
-        this.currentObj.linethrough = fabricObj.get('linethrough');
-        this.currentObj.fontWeight = fabricObj.get('fontWeight');
-        this.currentObj.text = fabricObj.get('text');
+        for(let key in this.currentObj){
+          this.currentObj[key] = fabricObj.get(key);
+        }
+        this.currentObj.newid = fabricObj.get('id');
       },
 
       changeID() {
