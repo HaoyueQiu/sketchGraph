@@ -25,6 +25,10 @@
         imgSrc: '',
         fileList: [],
         canvas: null,
+        A:{
+          A:4,
+          B:3,
+        }
       }
     },
     mounted() {
@@ -57,6 +61,7 @@
         this.canvas.setHeight(600);
         var obj = {a: "Hello", b: "World"};
         this.saveText(JSON.stringify(obj), "filename.json");
+        console.log(this.A['A']);
       },
     },
 

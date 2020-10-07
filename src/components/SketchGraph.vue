@@ -1,11 +1,15 @@
 <template>
   <div class="wraper" ref="wraper">
     <el-container>
-      <el-header><p>"this is SketchGraph"</p></el-header>
+      <el-header><p>This is SketchGraph</p></el-header>
       <el-container>
         <el-aside width="300px">
           <el-tabs v-model="activeName" type="card">
-            <el-tab-pane label="命令行" name="commandLine">命令行</el-tab-pane>
+            <el-tab-pane label="命令行" name="commandLine">命令行
+
+              <el-input v-model="cmd" @change="commandLine(cmd)"></el-input>
+
+            </el-tab-pane>
 
             <el-tab-pane label="工具栏" name="controlPanel">
               <el-color-picker v-model="drawColor" show-alpha :predefine="predefineColors"
@@ -26,13 +30,14 @@
               <el-button-group>
                 <div v-for="(tool,idx) in toolsArr" :key="idx"
                      @click="handleTools(tool.name)">
-                  <el-button type="primary"> {{tool.name}}</el-button>
+                  <el-button type="primary" class="toolsButton"> {{tool.name}}</el-button>
                 </div>
               </el-button-group>
 
-              <el-upload drag action="" multiple :show-file-list="false"
+              <el-upload drag action="" :show-file-list="false"
                          :on-change="getLocalImgSrc"
-                         :on-error="addImg">
+                         :on-error="addImg"
+                         :before-upload="judgeType">
                 <i class="el-icon-upload"></i>
                 <div class="el-upload__text">将图片拖到此处，或<em>点击上传</em></div>
               </el-upload>
@@ -62,7 +67,7 @@
 
               <div class="block">
                 <span>删除线</span>
-                <el-switch v-model="textSetting.lineThrough" active-color="#13ce66"
+                <el-switch v-model="textSetting.linethrough" active-color="#13ce66"
                            inactive-color="#888888"></el-switch>
               </div>
 
@@ -128,14 +133,14 @@
 
         <div class="attributeBlock">
           <span class="attributeSpan">画笔颜色</span>
-          <el-color-picker v-model="currentObj.strokeColor" show-alpha :predefine="predefineColors"
-                           @change="changeAttribute('strokeColor')"></el-color-picker>
+          <el-color-picker v-model="currentObj.stroke" show-alpha :predefine="predefineColors"
+                           @change="changeAttribute('stroke')"></el-color-picker>
         </div>
 
         <div v-if="currentObj.type!='line'" class="attributeBlock">
           <span class="attributeSpan">填充颜色</span>
-          <el-color-picker v-model="currentObj.fillColor" show-alpha :predefine="predefineColors"
-                           @change="changeAttribute('fillColor')"></el-color-picker>
+          <el-color-picker v-model="currentObj.fill" show-alpha :predefine="predefineColors"
+                           @change="changeAttribute('fill')"></el-color-picker>
         </div>
 
 
@@ -173,8 +178,8 @@
 
         <div class="block">
           <span>删除线</span>
-          <el-switch v-model="currentObj.lineThrough" active-color="#13ce66"
-                     inactive-color="#888888" @change="changeAttribute('lineThrough')"></el-switch>
+          <el-switch v-model="currentObj.linethrough" active-color="#13ce66"
+                     inactive-color="#888888" @change="changeAttribute('linethrough')"></el-switch>
         </div>
       </div>
 
@@ -250,10 +255,10 @@
             name: 'save2JSON',
           },
           {
-            name:'save2PNG'
+            name: 'save2PNG'
           },
           {
-            name:'save2JPG'
+            name: 'save2JPG'
           }
 
         ],
@@ -280,9 +285,9 @@
           type: '',
           id: '00',
           newid: '00',
-          strokeColor: 'rgba(0, 0, 0, 1)',
+          stroke: 'rgba(0, 0, 0, 1)',
           strokeWidth: 0,
-          fillColor: 'rgba(0, 0, 0, 0)',
+          fill: 'rgba(0, 0, 0, 0)',
           left: 0,
           top: 0,
           height: 0,
@@ -299,18 +304,21 @@
           fontWeight: 'normal',
           underline: false,
           overline: false,
-          lineThrough: false,
+          linethrough: false,
         },
         textSetting: {
           fontSize: 25,
           fontWeight: 'normal',
           underline: false,
           overline: false,
-          lineThrough: false,
+          linethrough: false,
         },
         lastTextObj: null,
         activeName: 'controlPanel',
         imgSrc: '',
+        isUploadImg: false,
+        uploadJSON: null,
+        cmd: '',
       }
     },
     mounted() {
@@ -339,7 +347,7 @@
         // 可以通过名称来获取fabricObject
         fabric.Canvas.prototype.getItemByID = function (ID) {
           let object = null,
-            objects = this.getObjects();
+            objects = this.fabricCanvas.getObjects();
           for (let i = 0, len = this.size(); i < len; i++) {
             if (objects[i].id && objects[i].id === ID) {
               object = objects[i];
@@ -371,12 +379,8 @@
                 break;
               case 'text':
                 this.lastTextObj = this.drawText();
-                while (!this.isIDUnique('text' + this.idNum++)) {
-                  this.idNum++;
-                }
-                this.isDrawing=false;
-                this.lastTextObj.set({'id': 'text' + this.idNum});
-                this.idNum++;
+                this.setID(this.lastTextObj,'text');
+                this.isDrawing = false;
                 this.fabricCanvas.add(this.lastTextObj);
                 this.lastTextObj.enterEditing();
                 this.setAllObjSelectable(false);
@@ -397,6 +401,12 @@
               this.currentObjAttribute(o.target);
               this.isObjClicked = false;
             }
+            if (this.currentTool == 'pencil') {
+              console.log('pencil');
+              let allObj = this.fabricCanvas.getObjects();
+              this.setID(allObj[allObj.length - 1],'path');
+            }
+
           },
           'mouse:move': (o) => {
             if (!this.isDrawing) {
@@ -427,7 +437,6 @@
         this.isDrawing = false;
       },
       handleTools(tool) {
-        console.log(tool);
         this.currentTool = tool;
         if (this.drawingObject) {
           this.fabricCanvas.remove(this.drawingObject)
@@ -490,11 +499,7 @@
             break;
         }
         if (drawingObject && this.isDrawing) {
-          while (!this.isIDUnique(name + this.idNum++)) {
-            this.idNum++;
-          }
-          drawingObject.set({'id': name + this.idNum});
-          this.idNum++;
+          this.setID(drawingObject,name);
           this.fabricCanvas.add(drawingObject);
           this.drawingObject = drawingObject;
           this.setAllObjSelectable(false);
@@ -601,7 +606,7 @@
           fontWeight: this.textSetting.fontWeight,
           overline: this.textSetting.overline,
           underline: this.textSetting.underline,
-          linethrough: this.textSetting.lineThrough,
+          linethrough: this.textSetting.linethrough,
           hasControls: true,
         });
         return fabricObj;
@@ -627,10 +632,15 @@
       },
 
       currentObjAttribute(fabricObj) {
+
         this.currentObj.obj = fabricObj;
+        this.currentObj.newid = fabricObj.get('id');
+        // for(let key in this.currentObj){
+        //   this.currentObj[key] = fabricObj.get(key);
+        // }
         this.currentObj.type = fabricObj.get('type');
         this.currentObj.id = fabricObj.get('id');
-        this.currentObj.newid = fabricObj.get('id');
+        console.log(this.currentObj.id);
         this.currentObj.left = fabricObj.get('left');
         this.currentObj.top = fabricObj.get('top');
         this.currentObj.angle = fabricObj.get('angle');
@@ -641,15 +651,14 @@
         this.currentObj.ry = fabricObj.get('ry');
         this.currentObj.flipX = fabricObj.get('flipX');
         this.currentObj.flipY = fabricObj.get('flipY');
-        this.currentObj.strokeColor = fabricObj.get('stroke');
+        this.currentObj.stroke = fabricObj.get('stroke');
         this.currentObj.strokeWidth = fabricObj.get('strokeWidth');
-        this.currentObj.fillColor = fabricObj.get('fill');
+        this.currentObj.fill = fabricObj.get('fill');
         this.currentObj.fontSize = fabricObj.get('fontSize');
         this.currentObj.overline = fabricObj.get('overline');
         this.currentObj.underline = fabricObj.get('underline');
-        this.currentObj.lineThrough = fabricObj.get('linethrough');
+        this.currentObj.linethrough = fabricObj.get('linethrough');
         this.currentObj.fontWeight = fabricObj.get('fontWeight');
-        console.log(this.currentObj.fontWeight)
         this.currentObj.text = fabricObj.get('text');
       },
 
@@ -683,12 +692,11 @@
           case 'strokeWidth':
             this.currentObj.obj.set({strokeWidth: Number(this.currentObj.strokeWidth)});
             break;
-          case 'strokeColor':
-            console.log(this.currentObj.strokeColor)
-            this.currentObj.obj.set({stroke: this.currentObj.strokeColor});
+          case 'stroke':
+            this.currentObj.obj.set({stroke: this.currentObj.stroke});
             break;
-          case 'fillColor':
-            this.currentObj.obj.set({fill: this.currentObj.fillColor});
+          case 'fill':
+            this.currentObj.obj.set({fill: this.currentObj.fill});
             break;
           case 'flipX':
             console.log(this.currentObj.flipX);
@@ -716,8 +724,8 @@
           case 'underline':
             this.currentObj.obj.set({underline: this.currentObj.underline});
             break;
-          case 'lineThrough':
-            this.currentObj.obj.set({linethrough: this.currentObj.lineThrough});
+          case 'linethrough':
+            this.currentObj.obj.set({linethrough: this.currentObj.linethrough});
             break;
           case 'text':
             this.currentObj.obj.set({text: this.currentObj.text});
@@ -741,36 +749,64 @@
         }
         return true;
       },
+      setID(fabricObj, idPre) {
+        let id = idPre + this.idNum;
+        this.idNum++;
+        while (!this.isIDUnique(id)) {
+          id = idPre + idNum;
+          this.idNum++;
+        }
+        fabricObj.set({'id': id});
+      },
       ErrorMessage(message) {
         this.$message.error(message);
       },
 
       addImg() {
-        let canvas = this.fabricCanvas;
-        let idNum = this.idNum;
-        console.log(this.idNum);
-        let isIDUnique = this.isIDUnique;
-        fabric.Image.fromURL(this.imgSrc, function (oImg) {
-          canvas.add(oImg);
-          let id = 'image' + idNum;
-          idNum++;
-          while (!isIDUnique(id)) {
-            idNum++;
-            id = 'image' + idNum;
-          }
-          oImg.set({'id': id});
-        });
-        this.idNum = idNum;
-
-        console.log(this.idNum);
-        this.setAllObjSelectable(false);
+        console.log(this.isUploadImg);
+        if (this.isUploadImg) {
+          let canvas = this.fabricCanvas;
+          let setID = this.setID;
+          console.log('33333');
+          // console.log('33333', this.imgSrc);
+          fabric.Image.fromURL(this.imgSrc, function (oImg) {
+            canvas.add(oImg);
+            setID(oImg,'image');
+          });
+          this.setAllObjSelectable(false);
+        } else {
+          this.fabricCanvas.loadFromJSON(this.uploadJSON);
+        }
       },
+
       getLocalImgSrc(event) {
         let reader = new FileReader();
-        reader.readAsDataURL(event.raw);
-        // 转换成功后的操作，reader.result即为转换后的DataURL ，
-        reader.onload = () => {
-          this.imgSrc = reader.result;
+        if (this.isUploadImg) {
+          reader.readAsDataURL(event.raw);
+          // 转换成功后的操作，reader.result即为转换后的DataURL ，
+          reader.onload = () => {
+            this.imgSrc = reader.result;
+            console.log('22222')
+            // console.log('22222', this.imgSrc);
+          }
+        } else {
+          reader.readAsText(event.raw);
+          reader.onload = ((e) => {
+            this.uploadJSON = e.target.result;
+          })
+        }
+      },
+
+      judgeType(file) {
+        console.log(file.type);
+        if ((file.type === 'image/jpeg') || (file.type === 'image/png')) {
+          this.isUploadImg = true;
+          console.log('11111')
+          // console.log('11111', this.imgSrc);
+        } else if (file.type === 'application/json') {
+          this.isUploadImg = false;
+        } else {
+          return false;
         }
       },
 
@@ -778,7 +814,7 @@
         let canvas = JSON.stringify(this.fabricCanvas);
         var a = document.createElement('a');
         a.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(canvas));
-        a.setAttribute('download', 'sketchGraph'+this.idNum+'.json');
+        a.setAttribute('download', 'sketchGraph' + this.idNum + '.json');
         this.idNum++;
         a.click()
       },
@@ -786,9 +822,22 @@
         let canvasURL = this.fabricCanvas.toDataURL(type);
         var a = document.createElement('a');
         a.setAttribute('href', canvasURL);
-        a.setAttribute('download', 'sketchGraph'+this.idNum+'.'+type);
+        a.setAttribute('download', 'sketchGraph' + this.idNum + '.' + type);
         this.idNum++;
         a.click()
+      },
+
+      commandLine(command) {
+        this.cmd = '';
+        let setCanvas = /canvas\.set\((\d+),(\d+)\)/;
+
+        let matchRes = null;
+        if ((matchRes = command.match(setCanvas)) && matchRes.length) {
+          console.log(matchRes[1]);
+          console.log(matchRes[2]);
+        } else {
+          console.log("不合规的命令！请查看手册!")
+        }
       },
     },
   }
@@ -826,5 +875,9 @@
 
   .el-upload-dragger {
     width: 300px;
+  }
+
+  .toolsButton {
+    width: 150px;
   }
 </style>
