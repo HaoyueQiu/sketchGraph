@@ -345,17 +345,7 @@
         //绑定画板事件，对鼠标的各个操作进行监听
         this.fabricCanvasEvent();
         // 可以通过名称来获取fabricObject
-        fabric.Canvas.prototype.getItemByID = function (ID) {
-          let object = null,
-            objects = this.fabricCanvas.getObjects();
-          for (let i = 0, len = this.size(); i < len; i++) {
-            if (objects[i].id && objects[i].id === ID) {
-              object = objects[i];
-              break;
-            }
-          }
-          return object;
-        };
+
       },
       //事件监听
       fabricCanvasEvent() {
@@ -537,6 +527,7 @@
       freeDraw() {
         this.fabricCanvas.freeDrawingBrush.width = this.drawWidth;
         this.fabricCanvas.freeDrawingBrush.color = this.drawColor;
+        console.log('free', this.drawColor);
         this.fabricCanvas.freeDrawingBrush.strokeDashArray = this.dashArray;
       },
 
@@ -570,6 +561,7 @@
         let radius = Math.sqrt((moveX) * (moveX) + (moveY) * (moveY));
         let top = this.mouseFrom.y - radius;
         let left = this.mouseFrom.x - radius;
+        console.log(top, left, moveX, moveY, radius, this.mouseFrom, this.mouseTo);
         let fabricObject = new fabric.Circle({
           left: left,
           top: top,
@@ -696,14 +688,23 @@
         }
         return true;
       },
-      setID(fabricObj, idPre) {
-        let id = idPre + this.idNum;
-        this.idNum++;
-        while (!this.isIDUnique(id)) {
-          id = idPre + idNum;
+      setID(fabricObj, idPre, isIDNum = true) {
+        if (isIDNum) {
+          let id = idPre + this.idNum;
           this.idNum++;
+          while (!this.isIDUnique(id)) {
+            id = idPre + idNum;
+            this.idNum++;
+          }
+          fabricObj.set({'id': id});
+        } else {
+          let item = this.getItemByID(idPre);
+          if (item) {
+            this.fabricCanvas.remove(item);
+          }
+          fabricObj.set({'id': idPre});
         }
-        fabricObj.set({'id': id});
+
       },
       ErrorMessage(message) {
         this.$message.error(message);
@@ -774,14 +775,108 @@
         a.click()
       },
 
+      getItemByID(ID) {
+        let object = null, objects = this.fabricCanvas.getObjects();
+        // console.log(objects);
+        for (let i = 0, len = objects.length; i < len; i++) {
+          if (objects[i].id && objects[i].id === ID) {
+            object = objects[i];
+            break;
+          }
+        }
+        // console.log(object);
+        return object;
+      },
+
       commandLine(command) {
         this.cmd = '';
         let setCanvas = /canvas\.set\((\d+),(\d+)\)/;
+        let setBrushWidth = /brush\.set\('width',(\d+)\)/;
+        let setBrushColor = /brush\.set\('color',\s*(.+)\)/;
+        let setFont = /font\.set\('(.+)',(.+)\)/;
+        let setDashArray = /dashline\.set\('(.+)',(\d+)\)/;
+
+        let buildCircle = /\s*(.+?)\s*=\s*circle\(\((\d+),(\d+)\),(\d+)\)/;
+        let buildRect = /\s*(.+?)\s*=\s*rect\((\d+),(\d+),(\d+),(\d+)\)/;
+        let buildLine = /\s*(.+?)\s*=\s*line\(\((\d+),(\d+)\),\((\d+),(\d+)\)\)/;
+        let buildEllipse = /\s*(.+?)\s*=\s*ellipse\((\d+),(\d+),(\d+),(\d+)\)/;
+        let buildText = /\s*(.+?)\s*=\s*Text\((\d+),(\d+),(.*)\)/;
+
+        let setObjAttribute=/\s*(.+?)\s*\.set\('(.+)',(.+)\)/;
+        let getObjAttribute=/\s*(.+?)\s*\.get\('(.+)'\)/;
+
+        let removeObj = /\s*(.+?)\s*\.remove\(\)/;
 
         let matchRes = null;
         if ((matchRes = command.match(setCanvas)) && matchRes.length) {
-          console.log(matchRes[1]);
-          console.log(matchRes[2]);
+          this.fabricCanvas.setWidth(Number(matchRes[1]));
+          this.fabricCanvas.setHeight(Number(matchRes[2]));
+        } else if ((matchRes = command.match(setBrushWidth)) && matchRes.length) {
+          this.drawWidth = Number(matchRes[1]);
+        } else if ((matchRes = command.match(setBrushColor)) && matchRes.length) {
+          this.drawColor = matchRes[1];
+        } else if ((matchRes = command.match(setFont)) && matchRes.length) {
+          if (matchRes[1] == 'fontSize') {
+            matchRes[2] = Number(matchRes[2]);
+          }
+          this.textSetting[matchRes[1]] = matchRes[2];
+          console.log(this.textSetting);
+        } else if ((matchRes = command.match(setDashArray)) && matchRes.length) {
+          if (matchRes[1] == 'full') {
+            this.dashArray[0] = Number(matchRes[2]);
+          } else if (matchRes[1] == 'space') {
+            this.dashArray[1] = Number(matchRes[2]);
+          }
+        } else if ((matchRes = command.match(buildCircle)) && matchRes.length) {
+          this.mouseFrom.x = Number(matchRes[2]);
+          this.mouseFrom.y = Number(matchRes[3]);
+          this.mouseTo.x = this.mouseFrom.x + Number(matchRes[4]);
+          this.mouseTo.y = this.mouseFrom.y;
+          let fabricObj = this.drawCircle();
+          this.fabricCanvas.add(fabricObj);
+          this.setID(fabricObj, matchRes[1], false);
+        } else if ((matchRes = command.match(buildRect)) && matchRes.length) {
+          this.mouseFrom.x = Number(matchRes[2]);
+          this.mouseFrom.y = Number(matchRes[3]);
+          this.mouseTo.x = this.mouseFrom.x + Number(matchRes[4]);
+          this.mouseTo.y = this.mouseFrom.x + Number(matchRes[5]);
+          let fabricObj = this.drawRectangle();
+          this.fabricCanvas.add(fabricObj);
+          this.setID(fabricObj, matchRes[1], false);
+        } else if ((matchRes = command.match(buildLine)) && matchRes.length) {
+          this.mouseFrom.x = Number(matchRes[2]);
+          this.mouseFrom.y = Number(matchRes[3]);
+          this.mouseTo.x = Number(matchRes[4]);
+          this.mouseTo.y = Number(matchRes[5]);
+          let fabricObj = this.drawLine();
+          this.fabricCanvas.add(fabricObj);
+          this.setID(fabricObj, matchRes[1], false);
+        } else if ((matchRes = command.match(buildEllipse)) && matchRes.length) {
+          this.mouseFrom.x = Number(matchRes[2]);
+          this.mouseFrom.y = Number(matchRes[3]);
+          this.mouseTo.x = Number(matchRes[4]) + Number(matchRes[2]);
+          this.mouseTo.y = Number(matchRes[5]) + Number(matchRes[3]);
+          let fabricObj = this.drawEllipse();
+          this.fabricCanvas.add(fabricObj);
+          this.setID(fabricObj, matchRes[1], false);
+        } else if ((matchRes = command.match(buildText)) && matchRes.length) {
+          this.mouseFrom.x = Number(matchRes[2]);
+          this.mouseFrom.y = Number(matchRes[3]);
+          let fabricObj = this.drawText();
+          fabricObj.set('text',matchRes[4]);
+          this.fabricCanvas.add(fabricObj);
+          this.setID(fabricObj, matchRes[1], false);
+        } else if ((matchRes = command.match(setObjAttribute)) && matchRes.length) {
+          this.currentObj.obj = this.getItemByID(matchRes[1]);
+          this.currentObj[matchRes[2]] = matchRes[3];
+          this.changeAttribute(matchRes[2]);
+          console.log(matchRes);
+        } else if ((matchRes = command.match(getObjAttribute)) && matchRes.length) {
+          this.currentObj.obj = this.getItemByID(matchRes[1]);
+          console.log(this.currentObj[matchRes[2]]);
+        } else if ((matchRes = command.match(removeObj)) && matchRes.length) {
+          let fabricObj = this.getItemByID(matchRes[1]);
+          this.fabricCanvas.remove(fabricObj);
         } else {
           console.log("不合规的命令！请查看手册!")
         }

@@ -80,6 +80,10 @@
         //   this.A[key] = 10;
         // }
         // console.log(this.A.A);
+        let str = "A = circle((100,300),60)"
+        let buildCircle=/(.+)\s*=\s*circle\(\((\d+),(\d+)\),(\d+)\)/;
+        let mathcRes = str.match(buildCircle);
+        console.log(mathcRes);
 
       },
     },
