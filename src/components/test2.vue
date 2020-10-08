@@ -1,9 +1,15 @@
 <template>
   <div>
-    <div class="block">
-      <span>画笔粗细 <el-slider v-model="drawWidth" :min=1></el-slider></span>
-
-    </div>
+    <el-table
+      :data="commandHistory"
+      height="500"
+      border
+      style="width:300px">
+      <el-table-column
+        prop="command"
+        label="Command History">
+      </el-table-column>
+    </el-table>
   </div>
 
 </template>
@@ -13,7 +19,16 @@
     name: 'Test2',
     data() {
       return {
-        drawWidth: 10
+        drawWidth: 10,
+        commandHistory: [{
+          command: '上海市普陀区金沙江路 1518 弄'
+        }, {
+          command: '上海市普陀区金沙江路 1518 弄'
+        }, {
+          command: '上海市普陀区金沙江路 1518 弄'
+        }, {
+          command: '上海市普陀区金沙江路 1518 弄'
+        }]
       };
     },
     mounted() {

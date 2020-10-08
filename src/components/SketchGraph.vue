@@ -1,14 +1,30 @@
 <template>
   <div class="wraper" ref="wraper">
     <el-container>
-      <el-header><p>This is SketchGraph</p></el-header>
+      <el-header>
+        <div class="sketchGraphHeader">SketchGraph
+          <el-button type="text" @click="centerDialogVisible = true" icon="el-icon-question"></el-button>
+
+        </div>
+      </el-header>
       <el-container>
         <el-aside width="300px">
           <el-tabs v-model="activeName" type="card">
-            <el-tab-pane label="命令行" name="commandLine">命令行
+            <el-tab-pane label="命令行" name="commandLine">
+              <el-table
+                :data="commandHistory"
+                height="550"
+                border
+                style="width:300px">
+
+                <el-table-column
+                  prop="command"
+                  label="Command History">
+                </el-table-column>
+
+              </el-table>
 
               <el-input v-model="cmd" @change="commandLine(cmd)"></el-input>
-
             </el-tab-pane>
 
             <el-tab-pane label="工具栏" name="controlPanel">
@@ -24,7 +40,7 @@
                 <span>虚线设置：实线</span>
                 <el-slider v-model="dashArray[0]" :min=1></el-slider>
                 <span>虚线设置：空白</span>
-                <el-slider v-model="dashArray[1]" :min=0 ></el-slider>
+                <el-slider v-model="dashArray[1]" :min=0></el-slider>
               </div>
 
               <el-row class="toolsButton">
@@ -33,33 +49,33 @@
               </el-row>
 
               <el-row class="toolsButton">
-                <el-button type="primary" @click="handleTools('remove')">删除</el-button>
-                <el-button type="primary" @click="handleTools('clear')">清空</el-button>
+                <el-button style="background-color:#21ABCD;" @click="handleTools('remove')">删除</el-button>
+                <el-button style="background-color:#21ABCD;" @click="handleTools('clear')">清空</el-button>
               </el-row>
 
               <el-row class="toolsButton">
-                <el-button type="primary" @click="handleTools('redo')">重做</el-button>
-                <el-button type="primary" @click="handleTools('undo')">撤销</el-button>
+                <el-button style="background-color:#89CFF0;" @click="handleTools('redo')">重做</el-button>
+                <el-button style="background-color:#89CFF0;" @click="handleTools('undo')">撤销</el-button>
               </el-row>
 
               <el-row class="toolsButton">
-                <el-button type="primary" @click="handleTools('text')">文本</el-button>
-                <el-button type="primary" @click="handleTools('pencil')">铅笔</el-button>
+                <el-button style="background-color:#66908A;" @click="handleTools('text')">文本</el-button>
+                <el-button style="background-color:#4682BF;" @click="handleTools('pencil')">铅笔</el-button>
 
               </el-row>
 
               <el-row class="toolsButton">
-                <el-button type="primary" @click="handleTools('line')">线段</el-button>
-                <el-button type="primary" @click="handleTools('rectangle')">矩形</el-button>
+                <el-button style="background-color:#425D8A;" @click="handleTools('line')">线段</el-button>
+                <el-button style="background-color:#425D8A;" @click="handleTools('rectangle')">矩形</el-button>
               </el-row>
 
               <el-row class="toolsButton">
-                <el-button type="primary" @click="handleTools('circle')">圆形</el-button>
-                <el-button type="primary" @click="handleTools('ellipse')">椭圆</el-button>
+                <el-button style="background-color:#425D8A;" @click="handleTools('circle')">圆形</el-button>
+                <el-button style="background-color:#425D8A;" @click="handleTools('ellipse')">椭圆</el-button>
               </el-row>
 
               <el-dropdown trigger="click" @command="handleSave" class="toolsButton">
-                <el-button type="primary">
+                <el-button style="background-color:#333399;">
                   保存<i class="el-icon-arrow-down el-icon--right"></i>
                 </el-button>
                 <el-dropdown-menu slot="dropdown">
@@ -235,6 +251,70 @@
       </div>
     </el-drawer>
 
+
+    <el-dialog
+      title="SketchGraph介绍"
+      :visible.sync="centerDialogVisible"
+      width="30%"
+      center>
+      <p>这里是SketchGraph，一个自由的绘图软件</p>
+      <br/>
+      <p>命令行说明书</p>
+      <p>画布大小设置：</p>
+      <p>canvas.set(width,weight)</p>
+      <p>canvas.clear()</p>
+      <br/>
+      <p>画笔设置：粗细、颜色</p>
+      <p>brush.set('width',width) 设置画笔粗细</p>
+      <p>brush.set('color',rgba(100, 23, 1, 1)) 设置画笔的颜色</p>
+      <p>brush.set('color','red')</p>
+      <br/>
+      <p>字体设置：大小、重量、上划线、下划线、删除线</p>
+      <p>font.set('fontSize',size)</p>
+      <p>font.set('fontWeight',weight)</p>
+      <p>font.set('overline',true/false)</p>
+      <p>font.set('underline',true/false)</p>
+      <p>font.set('overthrough',true/false)</p>
+      <br/>
+      <p>虚线设置</p>
+      <p>dashline.set('full',length)</p>
+      <p>dashline.set('space',length)</p>
+      <br/>
+      <p>圆：圆心、半径 center radius</p>
+      <p>objectID = circle(center,radius)</p>
+      <p>e.g. A = circle((100,300),60)</p>
+      <br/>
+      <p>长方形：top、left、width、height</p>
+      <p>objectID = rect(top,left,width,height)</p>
+      <p>e.g. A = rect(40,50,80,100)</p>
+      <br/>
+      <p>线段：两个点的位置</p>
+      <p>objectID = line(pointA,pointB)</p>
+      <p>e.g. A = line((40,50),(80,100))</p>
+      <br/>
+      <p>椭圆：圆心、rx、ry</p>
+      <p>objectID = ellipse(left,top,rx,ry)</p>
+      <p>e.g. A = ellipse(140,150,80,100)</p>
+      <br/>
+      <p>文本：文本内容、位置</p>
+      <p>objectID = Text(left,top,content)</p>
+      <p>e.g. A = Text(140,150,"Hello World")</p>
+      <br/>
+      <p>物体的操作：</p>
+      <p>属性变更</p>
+      <p>objectID.set('width',100)</p>
+      <p>e.g. </p>
+      <p>A = rect(40,50,80,100)</p>
+      <p>A.set('width',500)</p>
+      <p>属性获取:objectID.get('width')</p>
+      <br/>
+      <p>删除</p>
+      <p>objectID.remove()</p>
+      <p>e.g. A.remove()</p>
+      <span slot="footer" class="dialog-footer">
+  </span>
+    </el-dialog>
+
   </div>
 </template>
 
@@ -247,56 +327,6 @@
       return {
         currentTool: '',
         fabricCanvas: null,
-        toolsArr: [
-          {
-            name: 'choose',
-          },
-          {
-            name: 'pencil',
-          },
-          {
-            name: 'rectangle',
-            icon: ' el-icon-delete'
-          },
-          {
-            name: 'line',
-          },
-          {
-            name: 'circle',
-          },
-          {
-            name: 'ellipse',
-          },
-          {
-            name: 'text'
-          },
-
-          {
-            name: 'fill',
-          },
-          {
-            name: 'clear',
-          },
-          {
-            name: 'remove',
-          },
-          {
-            name: 'redo',
-          },
-          {
-            name: 'undo',
-          },
-          {
-            name: 'save2JSON',
-          },
-          {
-            name: 'save2PNG'
-          },
-          {
-            name: 'save2JPG'
-          }
-
-        ],
         mouseFrom: {}, //记录鼠标的移动
         mouseTo: {},
         isDrawing: false, //当前是否处于绘制模式
@@ -354,6 +384,14 @@
         isUploadImg: false,
         uploadJSON: null,
         cmd: '',
+        commandHistory: [
+          {
+            command: '欢迎来到sketchGraph命令行面板'
+          },
+          {
+            command: '请参照命令行手册~'
+          }],
+        centerDialogVisible: false,
       }
     },
     mounted() {
@@ -457,6 +495,7 @@
       // },
       resetCanvas() {
         this.fabricCanvas.clear();
+        this.fabricCanvas.backgroundColor = '#ffffff';
         this.mouseFrom = {};
         this.mouseTo = {};
         this.drawingObject = null;
@@ -829,6 +868,7 @@
       },
 
       commandLine(command) {
+        this.commandHistory.push({command: command});
         this.cmd = '';
         let setCanvas = /canvas\.set\((\d+),(\d+)\)/;
         let setBrushWidth = /brush\.set\('width',(\d+)\)/;
@@ -918,9 +958,11 @@
           let fabricObj = this.getItemByID(matchRes[1]);
           this.fabricCanvas.remove(fabricObj);
         } else {
+          this.commandHistory.push({command: "不合规的命令！请查看手册!"});
           console.log("不合规的命令！请查看手册!")
         }
         this.setAllObjSelectable(false);
+        this.updateModifications();
       },
     },
   }
@@ -943,6 +985,7 @@
 
   .attributeBlock {
     display: table;
+    margin-top: 3px;
   }
 
   .attributeSpan {
@@ -963,4 +1006,26 @@
   .toolsButton {
     margin-top: 5px;
   }
+
+  el-tabs {
+    width: 100%;
+  }
+
+  .el-tabs__header {
+    margin: 0px;
+  }
+
+  .sketchGraphHeader {
+    font-size: 50px;
+    align-items: center;
+  }
+
+  .el-button {
+    color: #FFF;
+  }
+
+  /*.el-table--scrollable-y{*/
+  /*  height:500px !important;*/
+  /*}*/
+
 </style>

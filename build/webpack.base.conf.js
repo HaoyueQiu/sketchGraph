@@ -66,7 +66,9 @@ module.exports = {
       },
       {
         test: /\.(sass|less|css)$/,
-        loaders: ['style-loader', 'css-loader', 'less-loader']
+        loaders: ['style-loader', 'css-loader', 'less-loader'],
+        exclude: /node_modules/
+
       }
     ]
   },
