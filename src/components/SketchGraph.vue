@@ -24,15 +24,50 @@
                 <span>虚线设置：实线</span>
                 <el-slider v-model="dashArray[0]" :min=1></el-slider>
                 <span>虚线设置：空白</span>
-                <el-slider v-model="dashArray[1]" :min=0></el-slider>
+                <el-slider v-model="dashArray[1]" :min=0 ></el-slider>
               </div>
 
-              <el-button-group>
-                <div v-for="(tool,idx) in toolsArr" :key="idx"
-                     @click="handleTools(tool.name)">
-                  <el-button type="primary" class="toolsButton"> {{tool.name}}</el-button>
-                </div>
-              </el-button-group>
+              <el-row class="toolsButton">
+                <el-button type="primary" @click="handleTools('choose')">选择</el-button>
+                <el-button type="primary" @click="handleTools('fill')">填充</el-button>
+              </el-row>
+
+              <el-row class="toolsButton">
+                <el-button type="primary" @click="handleTools('remove')">删除</el-button>
+                <el-button type="primary" @click="handleTools('clear')">清空</el-button>
+              </el-row>
+
+              <el-row class="toolsButton">
+                <el-button type="primary" @click="handleTools('redo')">重做</el-button>
+                <el-button type="primary" @click="handleTools('undo')">撤销</el-button>
+              </el-row>
+
+              <el-row class="toolsButton">
+                <el-button type="primary" @click="handleTools('text')">文本</el-button>
+                <el-button type="primary" @click="handleTools('pencil')">铅笔</el-button>
+
+              </el-row>
+
+              <el-row class="toolsButton">
+                <el-button type="primary" @click="handleTools('line')">线段</el-button>
+                <el-button type="primary" @click="handleTools('rectangle')">矩形</el-button>
+              </el-row>
+
+              <el-row class="toolsButton">
+                <el-button type="primary" @click="handleTools('circle')">圆形</el-button>
+                <el-button type="primary" @click="handleTools('ellipse')">椭圆</el-button>
+              </el-row>
+
+              <el-dropdown trigger="click" @command="handleSave" class="toolsButton">
+                <el-button type="primary">
+                  保存<i class="el-icon-arrow-down el-icon--right"></i>
+                </el-button>
+                <el-dropdown-menu slot="dropdown">
+                  <el-dropdown-item command="save2JSON">JSON文件</el-dropdown-item>
+                  <el-dropdown-item command="save2JPG">JPG格式</el-dropdown-item>
+                  <el-dropdown-item command="save2PNG">PNG格式</el-dropdown-item>
+                </el-dropdown-menu>
+              </el-dropdown>
 
               <el-upload drag action="" :show-file-list="false"
                          :on-change="getLocalImgSrc"
@@ -345,6 +380,7 @@
         //绑定画板事件，对鼠标的各个操作进行监听
         this.fabricCanvasEvent();
         // 可以通过名称来获取fabricObject
+        this.fabricCanvas.backgroundColor = 'white';
 
       },
       //事件监听
@@ -425,6 +461,10 @@
         this.mouseTo = {};
         this.drawingObject = null;
         this.isDrawing = false;
+      },
+
+      handleSave(command) {
+        this.handleTools(command);
       },
       handleTools(tool) {
         this.currentTool = tool;
@@ -802,8 +842,8 @@
         let buildEllipse = /\s*(.+?)\s*=\s*ellipse\((\d+),(\d+),(\d+),(\d+)\)/;
         let buildText = /\s*(.+?)\s*=\s*Text\((\d+),(\d+),(.*)\)/;
 
-        let setObjAttribute=/\s*(.+?)\s*\.set\('(.+)',(.+)\)/;
-        let getObjAttribute=/\s*(.+?)\s*\.get\('(.+)'\)/;
+        let setObjAttribute = /\s*(.+?)\s*\.set\('(.+)',(.+)\)/;
+        let getObjAttribute = /\s*(.+?)\s*\.get\('(.+)'\)/;
 
         let removeObj = /\s*(.+?)\s*\.remove\(\)/;
 
@@ -863,7 +903,7 @@
           this.mouseFrom.x = Number(matchRes[2]);
           this.mouseFrom.y = Number(matchRes[3]);
           let fabricObj = this.drawText();
-          fabricObj.set('text',matchRes[4]);
+          fabricObj.set('text', matchRes[4]);
           this.fabricCanvas.add(fabricObj);
           this.setID(fabricObj, matchRes[1], false);
         } else if ((matchRes = command.match(setObjAttribute)) && matchRes.length) {
@@ -880,6 +920,7 @@
         } else {
           console.log("不合规的命令！请查看手册!")
         }
+        this.setAllObjSelectable(false);
       },
     },
   }
@@ -887,7 +928,7 @@
 
 <style>
   .el-main {
-    background-color: #ffffff;
+    background-color: #EEEEEE;
     padding: 0px;
     margin: 0px;
   }
@@ -920,6 +961,6 @@
   }
 
   .toolsButton {
-    width: 150px;
+    margin-top: 5px;
   }
 </style>
