@@ -135,16 +135,20 @@
       </el-container>
     </el-container>
 
-    <el-drawer title="属性" :visible.sync="attributeDrawer" direction="rtl" size="30%">
+    <el-drawer title="属性" :visible.sync="attributeDrawer" direction="rtl" size="350px">
       <div class="attributeBlock">
-        <span class="attributeSpan">名称(唯一):</span>
-        <el-input type="text" v-model="currentObj.newid" maxlength="20" show-word-limit @blur="changeID()"></el-input>
+        <span class="attributeSpan">名称(唯一)</span>
+        <div>
+          <el-input type="text" v-model="currentObj.newid" maxlength="20" show-word-limit @blur="changeID()"></el-input>
+        </div>
       </div>
 
       <div class="attributeBlock">
         <span class="attributeSpan">x</span>
-        <el-input type="number" v-model="currentObj.left" min="0" :max="canvasWidth"
+        <el-input  type="number" v-model="currentObj.left" min="0" :max="canvasWidth"
                   @blur="changeAttribute('left')"></el-input>
+      </div>
+      <div class="attributeBlock">
         <span class="attributeSpan">y</span>
         <el-input type="number" v-model="currentObj.top" min="0" :max="canvasWidth"
                   @blur="changeAttribute('top')"></el-input>
@@ -159,6 +163,9 @@
         <div v-if="currentObj.type=='rect' || currentObj.type=='line'" class="attributeBlock">
           <span class="attributeSpan">width</span>
           <el-input type="number" v-model="currentObj.width" min="0" @blur="changeAttribute('width')"></el-input>
+        </div>
+
+        <div v-if="currentObj.type=='rect' || currentObj.type=='line'" class="attributeBlock">
           <span class="attributeSpan">height</span>
           <el-input type="number" v-model="currentObj.height" min="0" @blur="changeAttribute('height')"></el-input>
         </div>
@@ -240,13 +247,13 @@
 
       <div class="attributeBlock">
         <span class="attributeSpan">水平翻转</span>
-        <el-switch v-model="currentObj.flipX" active-color="#13ce66" inactive-color="#888888"
+        <el-switch class="attributeSpanFlip" v-model="currentObj.flipX" active-color="#13ce66" inactive-color="#888888"
                    @change="changeAttribute('flipX')"></el-switch>
       </div>
 
       <div class="attributeBlock">
         <span class="attributeSpan">垂直翻转</span>
-        <el-switch v-model="currentObj.flipY" active-color="#13ce66" inactive-color="#888888"
+        <el-switch class="attributeSpanFlip" v-model="currentObj.flipY" active-color="#13ce66" inactive-color="#888888"
                    @change="changeAttribute('flipY')"></el-switch>
       </div>
     </el-drawer>
@@ -503,6 +510,7 @@
       },
 
       handleSave(command) {
+        console.log(command);
         this.handleTools(command);
       },
       handleTools(tool) {
@@ -803,6 +811,10 @@
           this.setAllObjSelectable(false);
         } else {
           this.fabricCanvas.loadFromJSON(this.uploadJSON);
+          let objs = this.fabricCanvas.getObjects();
+          for (let i = 0, len = objs.length; i < len; ++i) {
+            this.setID(objs[i], objs[i].get('type'));
+          }
         }
       },
 
@@ -833,6 +845,7 @@
         } else if (file.type === 'application/json') {
           this.isUploadImg = false;
         } else {
+          this.ErrorMessage("请上传JSON/JPG/PNG格式的文件");
           return false;
         }
       },
@@ -843,7 +856,7 @@
         a.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(canvas));
         a.setAttribute('download', 'sketchGraph' + this.idNum + '.json');
         this.idNum++;
-        a.click()
+        a.click();
       },
       savetoImg(type) {
         let canvasURL = this.fabricCanvas.toDataURL(type);
@@ -874,7 +887,9 @@
         let setBrushWidth = /brush\.set\('width',(\d+)\)/;
         let setBrushColor = /brush\.set\('color',\s*(.+)\)/;
         let setFont = /font\.set\('(.+)',(.+)\)/;
-        let setDashArray = /dashline\.set\('(.+)',(\d+)\)/;
+        let setDashArray = /dashline\.set\('(.+)',(-?\d+)\)/;
+
+        let clearCanvas = /canvas\.clear\(\)/;
 
         let buildCircle = /\s*(.+?)\s*=\s*circle\(\((\d+),(\d+)\),(\d+)\)/;
         let buildRect = /\s*(.+?)\s*=\s*rect\((\d+),(\d+),(\d+),(\d+)\)/;
@@ -891,6 +906,8 @@
         if ((matchRes = command.match(setCanvas)) && matchRes.length) {
           this.fabricCanvas.setWidth(Number(matchRes[1]));
           this.fabricCanvas.setHeight(Number(matchRes[2]));
+        } else if ((matchRes = command.match(clearCanvas)) && matchRes.length) {
+          this.handleTools('clear');
         } else if ((matchRes = command.match(setBrushWidth)) && matchRes.length) {
           this.drawWidth = Number(matchRes[1]);
         } else if ((matchRes = command.match(setBrushColor)) && matchRes.length) {
@@ -902,10 +919,19 @@
           this.textSetting[matchRes[1]] = matchRes[2];
           console.log(this.textSetting);
         } else if ((matchRes = command.match(setDashArray)) && matchRes.length) {
+          console.log(matchRes[1]);
           if (matchRes[1] == 'full') {
-            this.dashArray[0] = Number(matchRes[2]);
+            if (Number(matchRes[2]) > 0) {
+              this.dashArray[0] = Number(matchRes[2]);
+            } else {
+              this.commandHistory.push({command: "参数需要大于0！"});
+            }
           } else if (matchRes[1] == 'space') {
-            this.dashArray[1] = Number(matchRes[2]);
+            if (Number(matchRes[2]) >= 0) {
+              this.dashArray[1] = Number(matchRes[2]);
+            } else {
+              this.commandHistory.push({command: "参数需要大于等于0！"});
+            }
           }
         } else if ((matchRes = command.match(buildCircle)) && matchRes.length) {
           this.mouseFrom.x = Number(matchRes[2]);
@@ -986,11 +1012,23 @@
   .attributeBlock {
     display: table;
     margin-top: 3px;
+    margin-left: 5px;
+  }
+  .attributeBlock .el-input{
+    width:200px;
   }
 
   .attributeSpan {
     display: table-cell;
     vertical-align: middle;
+    padding: 10px;
+    width:100px;
+  }
+
+   .attributeSpanFlip {
+    display: table-cell;
+    vertical-align: middle;
+    padding: 10px 0px;
   }
 
   #my-img {
