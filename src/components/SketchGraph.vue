@@ -90,7 +90,7 @@
                          :on-error="addImg"
                          :before-upload="judgeType">
                 <i class="el-icon-upload"></i>
-                <div class="el-upload__text">将图片拖到此处，或<em>点击上传</em></div>
+                <div class="el-upload__text">将图片/SketchGraphJson文件拖到此处<br/>或<em>点击上传</em></div>
               </el-upload>
             </el-tab-pane>
 
@@ -145,7 +145,7 @@
 
       <div class="attributeBlock">
         <span class="attributeSpan">x</span>
-        <el-input  type="number" v-model="currentObj.left" min="0" :max="canvasWidth"
+        <el-input type="number" v-model="currentObj.left" min="0" :max="canvasWidth"
                   @blur="changeAttribute('left')"></el-input>
       </div>
       <div class="attributeBlock">
@@ -596,6 +596,10 @@
         if (this.step < state.length) {
           this.fabricCanvas.clear();
           this.fabricCanvas.loadFromJSON(state[state.length - 1 - this.step - 1]);
+          let objs = this.fabricCanvas.getObjects();
+          for (let i = 0, len = objs.length; i < len; ++i) {
+            this.setID(objs[i], objs[i].get('type'));
+          }
           this.fabricCanvas.renderAll();
           this.step += 1;
         }
@@ -606,6 +610,10 @@
         if (this.step > 0) {
           this.fabricCanvas.clear().renderAll();
           this.fabricCanvas.loadFromJSON(state[state.length - 1 - this.step + 1]);
+          let objs = this.fabricCanvas.getObjects();
+          for (let i = 0, len = objs.length; i < len; ++i) {
+            this.setID(objs[i], objs[i].get('type'));
+          }
           this.fabricCanvas.renderAll();
           this.step -= 1;
         }
@@ -816,6 +824,7 @@
             this.setID(objs[i], objs[i].get('type'));
           }
         }
+        this.currentTool = 'choose'
       },
 
       getLocalImgSrc(event) {
@@ -1014,18 +1023,19 @@
     margin-top: 3px;
     margin-left: 5px;
   }
-  .attributeBlock .el-input{
-    width:200px;
+
+  .attributeBlock .el-input {
+    width: 200px;
   }
 
   .attributeSpan {
     display: table-cell;
     vertical-align: middle;
     padding: 10px;
-    width:100px;
+    width: 100px;
   }
 
-   .attributeSpanFlip {
+  .attributeSpanFlip {
     display: table-cell;
     vertical-align: middle;
     padding: 10px 0px;
