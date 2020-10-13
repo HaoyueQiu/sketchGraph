@@ -982,6 +982,7 @@
           this.fabricCanvas.add(fabricObj);
           this.setID(fabricObj, matchRes[1], false);
         } else if ((matchRes = command.match(setObjAttribute)) && matchRes.length) {
+          console.log('setAttribute');
           this.currentObj.obj = this.getItemByID(matchRes[1]);
           this.currentObj[matchRes[2]] = matchRes[3];
           this.changeAttribute(matchRes[2]);
